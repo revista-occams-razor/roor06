@@ -1,0 +1,1125 @@
+%\rput(2.5,-1.5){\resizebox{!}{4.5cm}{{\epsfbox{images/general/trucos1.eps}}}}
+
+\hypertarget{divulgacion:compresion1}{}\label{divulgacion:compresion}
+\pagestyle{divulgacion}
+
+\rput(7.9,-2.5){\resizebox{!}{11cm}{{\epsfbox{images/header-compresion.eps}}}}
+
+\psset{fillstyle=solid}
+\psframe[fillcolor=black,opacity=0.6](2,-4.5)(17,0)
+
+
+% -------------------------------------------------
+% Cabecera
+\begin{flushright}
+
+
+{\color{purple}\mtitle{12cm}{Compresión de Datos sin Pérdidas}}
+
+\msubtitle{10cm}{Repasamos los principales algoritmos}
+
+{\sf\color{white}{ por Signul Floid}}
+
+%{\psset{linecolor=black,linestyle=dotted}\psline(-12,0)}
+\end{flushright}
+
+\vspace{2mm}
+% -------------------------------------------------
+
+
+
+\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\scriptsize}
+
+\intro{introcolor}{A}{lguna vez te has preguntado como es posible hacer los ficheros de tu
+ordenador más pequeños?. Como es posible que \texttt{gzip} coja esos
+ficheros de texto y los deje en nada?. O como se quedan las fuentes del
+kernel en unos pocos megabytes?. Pues, agárrate los machos que todas
+esas preguntas van a ser respondidas a continuación\ldots. Si nunca te
+has echo alguna de esas preguntas, creo que estás leyendo la revista
+equivocada.}
+
+
+\begin{multicols}{2}
+
+La compresión de datos es un proceso por el cual el \emph{espacio}
+requerido para almacenar ciertos datos se reduce con el fin de\ldots.
+bueno\ldots{} de ahorrar \emph{espacio}. Si bien hay técnicas de
+procesado de señal que se podrían considerar como algoritmos de
+compresión sobre señales analógicas, en este artículo nos vamos a
+centrar en la compresión de datos digitales\ldots. vamos, en como coger
+una secuencia de números y convertirla en otra secuencia de números, más
+corta, la cual, de alguna forma, podemos volver a expandir en la
+secuencia original.
+
+
+Vamos a empezar por lo más sencillo, e iremos introduciendo distintos
+tipos de algoritmos de forma progresiva.
+
+\hypertarget{run-lenght-encoding}{%
+\sectiontext{white}{black}{RUN-LENGHT ENCODING}\label{run-lenght-encoding}}
+
+La verdad que no se como traducir este tipo de compresión\ldots.
+\emph{Codificacion de longitud de secuencia}?. La compresión
+\href{https://en.wikipedia.org/wiki/Run-length_encoding}{RLE}, como es
+normalmente conocida, es uno de los esquemas de compresión más
+sencillos. Popular en los 90 para comprimir imágenes con paleta de
+colores como \href{https://en.wikipedia.org/wiki/BMP_file_format}{BMP} o
+\href{https://en.wikipedia.org/wiki/PCX}{PCX}, ha caído en desuso en la
+actualidad en favor de algoritmos más eficientes. Sin embargo, la
+sencillez de este método hace que merezca la pena tenerlo en mente ya
+que nos puede resultar útil en ciertos casos.
+
+\begin{entradilla}
+{\em {\color{introcolor}La codificación RLE} es una de las formas más sencillas e intuitivas de comprimir datos}
+\end{entradilla}
+
+
+Vamos a ver como funciona esto con un sencillo ejemplo. Imaginemos que
+queremos codificar la siguiente imagen monocroma, utilizando este
+método, donde el caracter \texttt{.} representa el color blanco y el
+caracter \texttt{\#}, representa el color negro:
+\columnbreak
+\begin{verbatim}
+................
+..##########....
+..#.............
+..#.............
+..#.............
+..#####.........
+..#.............
+..#.............
+..#.............
+..##########....
+................
+\end{verbatim}
+
+Suponiendo que almacenamos el ancho y el alto de forma separada (como
+por ejemplo en una imagen
+\href{https://en.wikipedia.org/wiki/Netpbm}{\texttt{ppm}}, podemos
+almacenar todos los datos en una sola línea. Ahora, si os fijáis, que
+pasaría si en lugar de almacenar los 18 \texttt{.} del principio,
+almacenamos \texttt{18.}\ldots{} Estaríamos pasando de 18 caracteres a
+3\ldots. Voilá\ldots. Compresión.
+
+El caracter \texttt{E} de más arriba está inicialmente representado por
+176 bytes. Utilizando el método RLE, lo podríamos representar como
+
+\begin{verbatim}
+18.8#6.1#16.1#16.1#16.5#11.1#16.1#16.8#18.
+\end{verbatim}
+
+Esto son 43 caracteres, lo que significa que hemos comprimido nuestra
+imagen original unas 4 veces, o si lo preferís, un 75\%\ldots. Que no
+está nada mal.
+
+\emph{En la realidad los algoritmos de compresión trabajan con bits, se
+trata de aprovecha al máximo el espacio, pero para este primer ejemplo,
+hablar de bytes y caracteres hace más sencillo entender la idea
+general}.
+
+\hypertarget{rle-en-pruxe1ctica}{%
+\sectiontext{white}{black}{RLE EN LA PRÁCTICA}\label{rle-en-pruxe1ctica}}
+
+En la práctica la implementación de este método de compresión es un poco
+diferente. Como ya hemos dicho, este método funciona especialmente bien
+con datos en los que tenemos largas secuencias de un mismo valor.
+Pensemos por ejemplo, en imágenes de dibujos animados, al menos en los
+del siglo pasado, en la que se utilizaban colores planos .
+
+Sin embargo, siempre hay partes en las que los números cambian mucho. Si
+pensamos en imágenes, esas partes corresponden con los detalles de la
+imagen (las altas frecuencias, la parte de la imagen que cambia más).
+Esos valores, muchas veces vienen en ráfagas, es decir, cuando los
+valores cambian, no cambia solo uno. En este caso, RLE estaría generando
+secuencias más largas, es decir, en lugar de comprimir, estaría haciendo
+la secuencia más grande. Por ejmplo:
+
+\begin{verbatim}
+ABCDEF
+1A1B1C1D1E1F
+\end{verbatim}
+
+Como podemos ver a simple vista, la secuencia generada por el algoritmo
+es mucho más larga. Por esta razón se suele utilizar una codificación un
+poco más compleja. Vamos a contaros dos formas de mejorar esto. La
+primera más general y la segunda utilizada en algunos arcanos formatos
+de imagen :).
+
+Una forma de evitar este problema es que si la longitud de la secuencia
+es más de 3, duplicamos el caracter. Por ejemplo:
+
+\begin{verbatim}
+AAAAAABCDEFFFFGHHJ
+AA6BCDEFF4GHHJ
+^^     ^^ 
+\end{verbatim}
+
+Otra forma de aplicar este método al trabajar con datos binarios es
+reservar el bit de mayor peso para indicar si lo que sigue a
+continuación es una secuencia de un pixel repetido, o una secuencia de
+valores diferentes. De esta forma, en el caso de utilizar valores de 8
+bits, la secuencia más larga de valores repetidos que podemos
+representar es 128, al igual que la secuencia más larga de valores no
+repetidos.
+
+Para ilustrar este método, vamos a utilizar valores hexadecimales. El
+bit más significativo (el que tiene un valor asociado más grande) cuando
+está activo genera el valor 0x80. Para que nos resulte fácil ver la
+codificación vamos a representar secuencias de menos de 16 bytes, de
+forma que los valores los podamos acomodar en el nibble inferior de
+nuestro byte. Por cierto, este byte se suele referir como byte de
+repetición. Con todo esto:
+
+\begin{verbatim}
+0x8C 0xFF 0x04 0x01 0x02 0x03 0x04 0x85 0xFF
+\end{verbatim}
+
+Esta secuencia se expandiría en:
+
+
+\begin{verbatim}
+8C FF                   04      85 FF
+FFFFFFFFFFFFFFFFFFFFFFFF01020304FFFFFFFFFF
+\end{verbatim}
+
+
+Este tipo de codificación era común, con ciertas variaciones en formatos
+de imagen como PCX o
+\href{https://en.wikipedia.org/wiki/Truevision_TGA}{TGA}.
+
+\hypertarget{lempel-ziv-y}{%
+\sectiontext{white}{black}{LEMPEL, ZIV Y y \ldots{}}\label{lempel-ziv-y}}
+
+Los algoritmos LZ descritos en el legendario paper de Abraham Lempel y
+Jacob Ziv en 1977 (ahora ya sabéis de donde viene el nombre LZ),
+abrieron la puerta a toda una familia de algoritmos de compresión que
+todavía son utilizados masivamente hoy en día. El paper de 1977
+describía dos algoritmos conocidos como LZ1 y LZ2 o
+\href{https://en.wikipedia.org/wiki/LZ77_and_LZ78}{LZ77 y LZ78}.
+
+Estos algoritmos sentaron las bases del
+\href{https://en.wikipedia.org/wiki/Lempel\%E2\%80\%93Ziv\%E2\%80\%93Welch}{LZW}
+que se popularizó con el formato
+\href{https://en.wikipedia.org/wiki/GIF}{GIF} en 1984 gracias a la
+contribución de Terry Welch (la W en el nombre del algoritmo).
+Posteriores versiones como
+\href{https://en.wikipedia.org/wiki/Lempel\%E2\%80\%93Ziv\%E2\%80\%93Markov_chain_algorithm}{LZMA},
+utilizado por ejemplo por el compresor \texttt{7z} y \texttt{xz}.
+
+Para no aburriros, y no hacer esta sección supercomplicada, vamos a
+explicar el algoritmo original y dar algunas indicaciones de como fue
+modificado para dar lugar a otros memorables miembros de la familia LZ.
+
+LZ77 fué el algoritmo descrito en el paper original de 1977: \emph{A
+Universal Algorithm for Sequential Data Compression}, publicado en el
+mítico \emph{IEEE Transaction on Information Theory}.
+
+LZ77 es un algoritmo muy sencillo, pero es mucho más fácil de entender
+sobre un ejemplo, que explicado con palabras\ldots. pero bueno,
+básicamente lo que el algoritmo hace es buscar ocurrencias del texto en
+el propio texto.
+
+\begin{entradilla}
+{\em La familia de {\color{introcolor}algoritmos LZ marcaron un antes y un después} en el mundo de la compresión de datos.}
+\end{entradilla}
+
+
+El algoritmo funciona desplazando una ventana imaginaria sobre los datos
+a comprimir. En este ejemplo, vamos a considerar que el tamaño de la
+ventana es muy grande o en otras palabras, que vamos a buscar tan atrás
+como queramos. En las implementaciones reales este tamaño de ventana
+suele variar y usualmente se limita a unos 32Kb (valores de 2Kb y 4 Kb
+son también comunes). LZ77 tiene como salida una serie de tuplas
+(conjuntos de varios valores de distinta naturaleza)\ldots. un conjunto
+de tres valores que vamos a representar como
+\texttt{\textless{}d,l,c\textgreater{}}, donde:
+
+\begin{itemize}
+\item
+  \texttt{d} es el desplazamiento desde la posición actual (el caracter
+  que estamos comprimiendo) a la ocurrencia anterior más cercana. En
+  caso de que no haya una ocurrencia anterior, este valor será 0.
+\item
+  \texttt{l} es la longitud de la ocurrencia anterior que se corresponde
+  con la cadena actual.
+\item
+  \texttt{c} es el caracter que tenemos que añadir a la secuencia que
+  hemos encontrado para obtener el texto actual.
+\end{itemize}
+
+\hypertarget{comprimiendo-un-texto-con-lz77}{%
+\sectiontext{white}{black}{COMPRIMIENDO UN TEXTO CON LZ77}\label{comprimiendo-un-texto-con-lz77}}
+
+Con todo lo que hemos dicho vamos a comprimir el texto que mostramos a
+continuacin. El caracter \texttt{\^{}} indica la posición actual del
+algoritmo en el texto. El algoritmo buscará ocurrencias de la cadena que
+se encuentra a partir de ese símbolo, en la cadena que se encuentra
+antes que él. Comenzaremos en el primer caracter
+
+\begin{verbatim}
+abcbcbcbabbc
+^
+\end{verbatim}
+
+Como nuestra secuencia comprimida está vacía, no podemos encontrar el
+caracter \texttt{a} así que lo añadimos y nos movemos al siguiente
+carácter
+
+\begin{verbatim}
+abcbcbcbabbc
+ ^
+LZ77: (0,0,a)
+\end{verbatim}
+
+Lo mismo ocurrirá con la \texttt{b} y la \texttt{c} siguientes. Así que
+tras esas dos iteraciones extra no encontraremos con el siguiente
+estado:
+
+\begin{verbatim}
+abcbcbcbabbc
+   ^
+LZ77: (0,0,a), (0,0,b), (0,0,c)
+\end{verbatim}
+
+Si buscamos hacia atrás, veremos que si nos desplazamos dos caracteres
+hacia atrás encontraremos una \texttt{b} que es nuestro caracter actual.
+Ahora podemos intentar ver si hay más caracteres que coinciden. Vemos
+que la \texttt{c} también coincide. Así que si nos movemos 2 posiciones
+hacía atrás (valor \texttt{d} de la tupla), encontramos una secuencia de
+2 caracteres (valor \texttt{l}) de la tupla. Una vez añadidos esos dos
+caracteres, necesitamos incluir el caracter \texttt{b} para completar la
+secuencia (valor \texttt{c} de la tupla).
+
+\begin{verbatim}
+ VV 
+abcbcbcbabbc
+   ^^
+LZ77: (0,0,a), (0,0,b), (0,0,c), (2,2,b)
+\end{verbatim}
+
+Llegados a este punto, nuestra ventana de búsqueda se ha terminado
+(hemos alcanzado el caracter actual). En este caso se considera que los
+caracteres que hemos añadido ya pasan a formar parte del buffer de
+búsqueda, de forma que el \texttt{bc} que ya hemos añadido se convierte
+en un nuevo match. De esta forma hemos sido capaces de encontrar 5
+caracteres anteriores que coinciden con los que queremos comprimir,
+seguidos del caracter \texttt{a}.
+
+\begin{verbatim}
+abcbcbcbabbc
+         ^
+LZ77: (0,0,a), (0,0,b), (0,0,c), (2,5,a)
+      a        b         c        bcbcba
+      
+\end{verbatim}
+
+Lo siguiente que encontramos es \texttt{bb}, que no existe en nuestra
+secuencia de búsqueda, así que emitiremos un nuevo \texttt{(0,0,b)}
+
+\begin{verbatim}
+abcbcbcbabbc
+          ^
+LZ77: (0,0,a), (0,0,b), (0,0,c), (2,5,a) 
+      a        b         c        bcbcba  
+      (0,0,b)
+      b
+\end{verbatim}
+
+Y finalmente el último \texttt{bc} se convertiría en:
+
+\begin{verbatim}
+abcbcbcbabbc
+            ^
+LZ77: (0,0,a), (0,0,b), (0,0,c), (2,5,a) 
+      a        b         c        bcbcba  
+      (0,0,b) (1,1,c)
+      b       bc
+\end{verbatim}
+
+
+\hypertarget{codificando-la-salida}{%
+\sectiontext{white}{black}{CODIFICANDO LA SALIDA}\label{codificando-la-salida}}
+
+A primera vista, no parece claro que hayamos comprimido mucho nuestro
+texto de entrada. Por cada secuencia que encontramos generamos 3
+valores\ldots{} Bueno, en la práctica no se suelen almacenar los tres
+valores. La mayoría de implementaciones definen dos tipos de salida. Un
+par longitud, posición, y lo que se conoce como un literal o los valores
+reales que estamos codificando.
+
+Así, en nuestro ejemplo anterior la secuencia se convertiría en:
+
+\begin{verbatim}
+<a><b><c><2,5><a><b><1,1><b>
+\end{verbatim}
+
+Así contado a lo bestia la secuencia inicial tiene 12 caracteres,
+mientras que la comprimida tiene solo 10. La forma de diferencia entre
+un tipo de salida y otro, así como la codificación final de los valores
+depende de la implementación. Por ejemplo, es común utilizar código de
+longitud variable para los valores de longitud.
+
+Una de los formatos más comunes de LZ77 es
+\href{https://en.wikipedia.org/wiki/Deflate}{DEFLATE}, desarrollado para
+la versión 2 de la utilidad PKZIP (que permitía comprimir ejecutables).
+Esta implementación estaba patentada, pero tras mucho trabajo una nueva
+implementación que no inflingía la patente fué desarrollada y publicada
+en el \href{https://www.ietf.org/rfc/rfc1951.txt}{RFC-1951}. Esta
+implementación libre de patentes permitió el desarrollo de \texttt{gzip}
+o el formato \href{https://en.wikipedia.org/wiki/PNG}{\texttt{PNG}}.
+
+\begin{entradilla}
+{\em El {\color{introcolor}formato DEFLATE es uno de los más utilizados en Intenet} y los soportan la mayoría de servidores Web}
+\end{entradilla}
+
+El formato DEFLATE combina la salida del algoritmo LZ77 con la
+codificación Huffmann, de la que hablaremos en un rato, para definir un
+formato binario comprimido.
+
+\hypertarget{el-advenimiento-de-gif}{%
+\sectiontext{white}{black}{EL ADVENIMIENTO DE GIF}\label{el-advenimiento-de-gif}}
+
+Ahora que sabemos como funciona el algoritmo LZ77, vamos a ver una cosa
+curiosa. Imaginad que queremos comprimir la siguiente secuencia:
+
+\begin{verbatim}
+aaaaaaaaaabbbbbbaaaaaaaaaa
+\end{verbatim}
+
+Aplicando el algoritmo obtenemos:
+
+\begin{verbatim}
+<a><1,9><b><1,5><a><1,7>
+\end{verbatim}
+
+Y aplicando RLE obtendríamos:
+
+\begin{verbatim}
+aa10 bb6 aa9
+\end{verbatim}
+
+Dejando a un lado la forma final de codificar los datos en los fichero o
+en la red, podemos ver que LZ77 funciona como un algoritmo RLE para
+datos en los que tenemos largas secuencia de datos iguales. O dicho de
+otra forma, el algoritmo se comporta de forma similar a RLE para los
+casos más favorables para RLE, pero además funciona bien en otros muchos
+casos.
+
+Como dijimos más arriba, en 1984 la variante LZW fué publicada, y
+algunos años después se creo el formato GIF que hacía uso de este tipo
+de compresión. Dejando a un lado otras capacidades de GIF como la
+posibilidad de hacer animaciones, o la carga progresiva que fueron clave
+en los inicios de la Web en Internet, este formato obtenía mejores
+resultados que los formatos basados en RLE y rápidamente desbancó a
+todos ellos.
+
+\begin{entradilla}
+{\em En los albores de Internet, {\color{introcolor}el formato GIF era el más utilizado}. Aún hoy en día es el formato más común para pequeñas animaciónes.}
+\end{entradilla}
+
+La razón de que GIF ofreciera mejores resultados\ldots{} bueno, la
+acabamos de ver, digamos que como poco LZ77 es tan bueno como RLE, y LZW
+es mejor que LZ77.. Lamentablemente la historia de LZW está intímamente
+ligada al mundo de las patentes y el formato GIF desarrollado por
+Compuserve estuvo siempre afectado por la controversia entre los
+acuerdos de Compuserrve y Unisys (poseedor de la patente de LZW).
+Finalmente, como os comentamos más arriba, el desarrolló PNG como
+alternativa a GIF y solución al conflicto. En 2004 todas las patentes
+relacionadas con GIF expiraron y ahora puede utilizarse libremente, si
+bien, hoy en día su uso está mucho más limitado que en los primeros
+tiempos de Internet.
+
+\hypertarget{cuxf3digos-de-longitud-variable}{%
+\sectiontext{white}{black}{CÓDIGOS DE LONGITUD VARIABLE}\label{cuxf3digos-de-longitud-variable}}
+
+Normalmente, cuando se habla de compresión se suele empezar con esta
+parte que es la más matemática, pero creo que haber empezado por los
+algoritmos más visuales hace más sencillo introducir esta parte\ldots{}
+Además, si ahora te pierdes o te cansas\ldots{} bueno ya has leído la
+mitad del artículo y con suerte aprendido un par de cosas :).
+
+La idea detrás de los códigos de longitud variable es muy sencilla:
+\emph{¿Por qué no codificamos los caracteres que aparecen más a menudo
+con menos bits?}. Sencillo no?
+
+En general, la forma más sencilla de codificar un mensaje es asignar
+códigos de longitud fija. Imaginemos que queremos codificar 4 símbolos
+para un sistema de medición de precipitaciones, algo como:
+
+\begin{verbatim}
+A : Caen Chuzos de Punta
+B : Llueve
+C : Chispea
+D : Más seco que la mohama. 
+\end{verbatim}
+
+La forma habitual de codificar esto es utilizar un código de longitud
+fija. Como tenemos 4 símbolos necesitamos 2 bits, ya que
+\texttt{2\^{}2\ =\ 4} o si lo preferís, \texttt{log2\ 4\ =\ 2} y
+haríamos algo como esto:
+
+\begin{verbatim}
+A -> 00
+B -> 10
+C -> 01
+D -> 11
+\end{verbatim}
+
+Perfecto no?\ldots{} Pues sí. Este código funciona perfectamente en
+cualquier caso, pero hay casos en los que estaremos desperdiciando bits
+y por lo tanto ancho de banda, en el caso de transmitir estos datos de
+nuestros sensores a un servidor, o espacio de almacenamiento en el caso
+que guardemos los datos en algún tipo de memoria. Vamos a introducirnos
+en el mundo de la
+\href{https://en.wikipedia.org/wiki/Information_theory}{Teoría de la
+Información} para intentar entender mejor como podemos aprovechar mejor
+nuestro ancho de banda o nuestro espacio de almacenamiento.
+
+\hypertarget{la-teoruxeda-de-la-informaciuxf3n}{%
+\sectiontext{white}{black}{LA TEORÍA DE LA INFORMACIÓN}\label{la-teoruxeda-de-la-informaciuxf3n}}
+
+Como su propio nombre indica, el elemento principal de la teoría de la
+información es la información. De esto vamos a hablar en un momentito,
+pero antes debéis saber que todo el fundamento matemático tras la teoría
+de la información, comenzó allá por los locos años 20. Primero con
+Nyquist (el del límite que lleva su mismo nombre) y Hartley, (que dio
+nombre a la unidad de medida de información en base 10\ldots{} como el
+bit en base dos, pero en base 10), pero la parte de la que vamos a
+hablar aquí fue introducida unos años más tarde por
+\href{https://en.wikipedia.org/wiki/Claude_Shannon}{Claude Shannon},
+quien en un paper de unas 50 páginas titulado
+\href{https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf}{\emph{A
+mathematical Theory of Communications}} sentó las bases de la teoría de
+la información moderna.
+
+En lo que resta de artículo vamos a introduciros una pequeña parte de
+los conceptos que Shannon desarrolla en ese mítico artículo, el cual os
+recomendamos que leáis si os interesa el tema, ya que desvela los
+fundamentos de muchas tecnologías actuales.
+
+Ya esta bien de historia, la parte que nos interesa a nosotros, desde el
+punto de vista de la compresión de datos, es en la que Shannon define lo
+que es la información y nos da una forma de medirla. Y el concepto es
+sorprendentemente sencillo.
+
+Imaginemos que nuestro sistema de sensores de lluvia, cuyos mensajes
+hemos codificado con 2 bits, lo instalamos en Amsterdam. Por si no lo
+sabéis, los Paises Bajos tienen un tiempo de mi*\ldots{} muy malo y
+llueve muy a menudo. En invierno, en verano,\ldots{} Si vives en
+Amsterdam y alguien te dice que va a llover, pensarías algo así como:
+\emph{Vaya, lo típico, menuda novedad}. Pero si te dicen que mañana va a
+hacer sol\ldots. ah, amigo, la cosa cambia mucho. La gente se pedirá
+incluso días libres en el trabajo, por que\ldots{} bueno, los pocos días
+de Sol que hay, hay que aprovecharlos.
+
+Sabiendo esto, de los mensajes que definimos anteriormente para nuestro
+sistema de alertas de lluvia, cual creéis que es el mensaje que nos da
+más información?\ldots Efectivamente, el D. Pero que pasaría si
+instalamos el sistema en el desierto de Atacama?, el lugar más seco de
+la tierra?\ldots{} Allí que llueva es una gran noticia no?.
+
+Pues con todo esto que os acabamos de contar, parece lógico pensar que
+la cantidad de información que proporciona un mensaje es inversamente
+proporcional a la probabilidad de que ese mensaje ocurra, o si lo
+preferís que el evento asociado a ese mensaje ocurra\ldots{} que en
+nuestro caso es lo mismo. Cuando menor sea la probabilidad de que el
+mensaje ocurra, más información nos estará proporcionando ese mensaje.
+Así que podemos concluir que:
+
+
+\begin{center}
+$ I(x) = log (\frac{1}{p(x)}) = - log (p(x))$
+\end{center}
+
+Donde \texttt{I(x)} es la cantidad de información del mensaje \texttt{x}
+y \texttt{p(x)} es la probabilidad de que ocurra ese mensaje (o evento
+si lo queremos ver desde un punto de vista más estadístico)
+
+\begin{entradilla}
+{\em La {\color{introcolor}cantidad de información} que nos proporciona un mensaje es inversamente proporcional a su probabilidad}
+\end{entradilla}
+
+En caso de que no estéis acostumbrados a trabajar con logaritmos, que
+sepáis que esa función, el logaritmo, cumple la siguiente propiedad:
+
+
+\begin{center}
+$ log(\frac{1}{a}) = log (a ^ {-1}) = -1 \times log(a)$
+\end{center}
+
+En otras palabras, el logaritmo de un número elevado a un determinado
+exponente, es igual al exponente, multiplicado por el logaritmo del
+número. Como el inverso de cualquier número es ese número elevado a -1,
+se cumple la expresión de arriba, y por ello \texttt{log(1/p)=-log(p)}
+
+Os preguntaréis, por qué el logaritmo?. La verdad que es una cuestión de
+conveniencia, ya que las probabilidades, por definición, toman valores
+entre 0 y 1. En otras palabras, se trata de valores muy pequeños. La
+función logaritmo tiene la propiedad de expandir los valores entre 0 y
+1, de forma que resulta más sencillo trabajar con ellos. Por ejemplo,
+imaginad el siguiente caso:
+
+\begin{align*}
+p(x) =0.0001 \\
+\frac{1}{p(x)} = 10000 \\
+log (\frac{1}{p(x)}) = -4 
+\end{align*}
+
+
+El logaritmo nos permite evitar números muy pequeños o muy grandes y nos
+ofrece valores más fáciles de interpretar y por lo tanto más fáciles de
+manejar.
+
+Bueno, es hora de continuar, ahora que podemos medir la cantidad de
+información en un mensaje vamos a ver como podemos cuantificar muchos de
+estos mensajes juntos.
+
+\hypertarget{entropuxeda}{%
+\sectiontext{white}{black}{ENTROPÍA}\label{entropuxeda}}
+
+La palabra \href{https://en.wikipedia.org/wiki/Entropy}{entropía} se
+utiliza como un forma de medir el desorden de las cosas. En
+termodinámica nos indica como de revolucionados están los átomos dentro
+de un determinado sistema (y sistema termodinámicamente hablando es un
+concepto muy amplio), pero
+\href{https://en.wikipedia.org/wiki/Entropy_(information_theory)}{Entropía},
+en teoría de la información, se utiliza para representar lo aleatoria
+que es una determinada secuencia de datos.
+
+Dicho de otra forma, la entropía nos da una medida de la redundancia (o
+de lo aleatorio si lo preferís) que hay en un mensaje y por lo tanto nos
+indica cuanto se puede comprimir un determinado mensaje. Pensad por un
+segundo en RLE o LZ77\ldots{} Ambos algoritmos se basan en buscar
+valores repetidos y re-escribiros de una forma más eficiente. Es decir,
+esos algoritmos intentan reducir la redundancia en el mensaje. Si no hay
+redundancia\ldots{} bueno, los algoritmos simplemente no funcionan y en
+general, lejos de comprimir los datos van a aumentar su tamaño\ldots{}
+Que pasaría si a LZ77 le pasamos un mensaje formado por una única
+repetición de cada símbolo?\ldots{} No tendría nada que comprimir
+verdad\ldots.
+
+La entropía en teoría de la información se calcula con la siguiente
+fórmula. Os adelanto que parece complicada pero en seguida veréis que es
+mucho más sencilla de lo que parece.
+
+\begin{center}
+$ H = \sum\limits_{i=o}^N p(x)log(\frac{1}{p(x)}) = - \sum\limits_{i=o}^N p(x)log(p(x))$
+\end{center}
+
+Vista así da un poco de miedo la formulita no?. Pero y si la escribimos
+así:
+
+
+\begin{center}
+$ H = \sum\limits_{x} p(x)I(x)$
+\end{center}
+
+Donde, \texttt{p(x)} es la probabilidad de que ocurra el mensaje
+\texttt{x}, e \texttt{I(x)} es la cantidad de información de ese
+mensaje. Dicho de otra forma, la entropía no es más que la media
+ponderada de la cantidad de información de todos los mensajes (o más
+correctamente símbolos)q ue utilizamos en un determinado sistema de
+comunicación.
+
+
+
+\begin{center}
+{\colorbox{excolor}{
+\begin{minipage}{.8\linewidth}
+{\em
+Normalmente cuando calculáis una media suponéis que los valores tiene
+todos la misma probabilidad, es decir, la distribución es uniforme. En
+ese caso la probabilidad de cada valor es 1/N, siendo N el número de
+elementos, Así, cuando hacéis una media, sumáis los valores y los
+dividís por N. En el caso general, en lugar de dividir por N hay que
+multiplicar cada valor por su probabilidad asociada y así es como
+obtenemos la fórmula anterior.}
+\end{minipage}
+}
+}
+\end{center}
+
+\hypertarget{breve-comentario}{%
+\sectiontext{white}{black}{BREVE COMENTARIO}\label{breve-comentario}}
+
+Hasta ahora hemos estado utilizando las palabras mensaje y símbolo de
+una forma un poco ambigua, ya que la diferencia no era realmente
+importante, pero llegados a este punto es importante que conozcamos la
+diferencia entre cada una de estas palabras.
+
+Un símbolo es cada uno de los elementos mínimos que podemos transmitir o
+almacenar. El conjunto de todos los símbolos utilizados en un
+determinado sistema de comunicaciones se denomina alfabeto. Los
+símbolos, pueden ser cualquier cosa: Números, rayas y puntos, valores de
+voltaje\ldots. Pero en general para nosotros cada símbolo va a ser un
+valor normalmente codificado en binario.
+
+En este contexto, un mensaje no es más que una secuencia de símbolos.
+Espero no haberos liado mucho. Si pensamos en este articulo:
+
+\begin{itemize}
+
+\item
+  Las letras son los símbolos utilizados para codificar el mensaje
+\item
+  El alfabeto\ldots{} bueno, es el alfabeto, la lista de las letras que
+  podemos usar :).
+\item
+  Y el mensaje es el articulos que combina los símbolos del alfabeto de
+  una forma concreta para transmitir cierta información.
+\end{itemize}
+
+En nuestros ejemplos anteriores, los símbolos que definíamos, eran por
+si mismo un mensaje. O si lo preferís, el número de mensajes posible
+estaba limitado y cada mensaje contenia solo un símbolo. Por ejemplo, si
+nuestro mensaje es que esta lloviendo, utilizamos el símbolo D, pero no
+tiene sentido añadir ninguno de los otros. El mensaje y el símbolo
+coinciden en ese caso.
+
+Sin entrar en profundidad en otros aspectos del artículo de Shannon,
+espero que la idea general esté clara y resulte más sencillo comprender
+el resto del artículo.
+
+\hypertarget{entropuxeda-y-redundancia}{%
+\sectiontext{white}{black}{ENTROPÍA Y REDUNDANCIA}\label{entropuxeda-y-redundancia}}
+
+Tras esta pequeña disgresión, continuemos con el tema principal.
+
+La entropía es capaz de medir la cantidad de redundancia que hay en una
+determinada secuencia de símbolos o mensaje, y por lo tanto nos dará,
+entre otras cosas, una medida de cuanto podemos comprimir esos mensajes.
+Volvamos por un momento a nuestro ejemplo de la lluvia y vamos a
+inventarnos unos valores de ejemplo para tener algo con lo que trabajar.
+Imaginemos que en nuestra ciudad imaginaria Razorburgo, llueve a lo
+bestia unos 80 días al año, hace sol unos 181 días al año, 52 días al
+año está nublado y llueve de forma normal y el resto del año, unos 53
+días, esta nublado y chispea. Esto nos daría las siguientes
+probabilidades.
+
+{\scriptsize
+\begin{verbatim}
+A : Caen Chuzos de Punta     | p(A) = 80/365  = 0.219
+B : Llueve                   | p(B) = 52/365  = 0.142
+C : Chispea                  | p(C) = 53/365  = 0.145
+D : Más seco que la mohama.  | p(D) = 181/365 = 0.496
+\end{verbatim}
+}
+
+En este ejemplo, los mensajes que nos dan más información son los que
+nos dice si llueve. Especialmente si llueve normal o chispea. Ahora
+podemos calcular la entropía para este conjunto de símbolos.
+
+\begin{verbatim}
+H = - (  0.219 * log2(0.219)  +
+         0.142 * log2 (0.142) +
+         0.145 * log2 (0.145) +
+         0.496 * log2 (0.496) = 1.785
+\end{verbatim}
+
+Comparemos esto con la que obtendríamos en un lugar en el que llueve y
+hace sol por igual. Es decir, la probabilidad de cualquier símbolo es
+1/4:
+
+\begin{center}
+$ H = 4 \Big(\frac{1}{4} log_2(4)\Big) = 4 \frac{2}{4} = 2$
+\end{center}
+
+Sip, la entropía no solo nos dice la cantidad de redundancia que hay en
+un mensaje, sino que también nos da el límite inferior de la cantidad de
+bits que necesitamos para codificar cada símbolo de un mensaje. Bueno,
+si hemos usado logaritmos en base dos. Si usáis logaritmos neperianos
+(base e), obtendréis NATs y si usáis logaritmos naturales (base 10)
+obtendréis HARTLEYs.
+
+\begin{entradilla}
+{\em {\color{introcolor}La entropía nos dice la cantidad de redundancia} que hay en un determinado mensaje}
+\end{entradilla}
+
+Observad que si definimos un conjunto de mensajes equi-probables (todos
+con la misma posibilidad, la formula se reduce a:
+
+\begin{center}
+$H = N \Big( \frac{1}{N} log_2(\frac{1}{N})\Big) = - log_2 (N)$
+\end{center}
+Y eso no es otra cosa que el número de bits necesarios para codificar un
+símbolos de cualquier alfabeto con símbolos equiprobables\ldots. Mind
+blowing!!!!
+
+\hypertarget{teorema-de-codificaciuxf3n-de-fuente}{%
+\sectiontext{white}{black}{TEOREMA DE CODIFICACIÓN DE FUENTE}\label{teorema-de-codificaciuxf3n-de-fuente}}
+
+Esto que os acabamos de contar es la base de lo que se conoce como el
+teorema de codificación de fuente de Shannon, y puede ser demostrado
+matemáticamente. El teorema en su formulación original dice lo
+siguiente.
+
+\emph{Dadas N variables aleatorias independientes e idénticamente
+distribuidas, cada una de ellas con entropía H(X), estas N variables
+pueden ser comprimidas en N * H(X) bits con un riesgo despreciable de
+pérdida de información cuando N tiende a infinito. Por el contrario, si
+esas variables aleatorias son comprimidas en menos de N * H(x) bits es
+virtualmente seguro que se perderá información.}
+
+Es decir, la entropía no solo nos permite determinar lo aleatorio que es
+un mensaje sino que nos indica cual es el límite teórico de compresión
+de una determinada fuente de datos.
+
+Como os contamos en la sección anterior, la entropía nos indica el
+número mínimo de bits que necesitamos por símbolo mientras que el
+teorema de codificación de fuente habla de mensajes de N símbolos. Por
+eso el tamaño total del que habla está multiplicado por \texttt{N}.
+
+Ahora que sabemos cuanto podemos comprimir una determinada fuente de
+datos, solo necesitamos saber como codificar esos datos para acercarnos
+lo más posible a el valor teórico que nos proporciona el teorema.
+Observad que el teorema asegura que podemos conseguir ese nivel de
+compresión cuando el mensaje tiene una longitud infinita, o si lo
+preferís cuando es mú grande. Lo que esto significa es que, en la
+práctica, la tasa de compresión que obtendremos será un poco superior a
+la teórica\ldots{} Pero para explorar todo esto necesitamos ser capaces
+de codificar nuestros datos de forma que ocupen menos. Vamos allá.
+
+\hypertarget{cuxf3digos-de-longitud-variable-1}{%
+\sectiontext{white}{black}{CÓDIGOS DE LONGITUD VARIABLE\\OTRA VEZ}\label{cuxf3digos-de-longitud-variable-1}}
+
+Ahora que ya hemos introducido los principales elementos que necesitamos
+para entender como comprimir mensajes desde el punto de vista de la
+teoría de la información, vamos a ver como usar todo esto en la
+práctica. Lo que vamos a hacer es algo bastante obvio: \emph{Usar menos
+bits para codificar los mensajes que aparezcan más a menudo}. O lo que
+es lo mismo, utilizar códigos de longitud variable en los que los
+símbolos no tienen todos el mismo número de bits. Que es exactamente
+otra forma de decir lo mismo :).
+
+\begin{entradilla}
+{\em El {\color{introcolor}código Morse} es quizás el código de longitud variable más conocido.}
+\end{entradilla}
+
+Un ejemplo de esto es el conocido
+\href{https://en.wikipedia.org/wiki/Morse_code}{código Morse}, el cual
+asigna secuencias de puntos y rayas más cortas a las letras más
+comunes\ldots{} al menos en el idioma inglés.
+
+Para ilustrar todo esto, usaremos un ejemplo muy sencillo con 4
+símbolos: A, B, C, D.
+
+Empecemos por el caso más sencillo en el que todos los símbolos tienen
+la misma posibilidad de aparecer:
+
+\begin{verbatim}
+A | p(A) = 1/4 | log(p(A)) = -2 | 00
+B | p(B) = 1/4 | log(p(B)) = -2 | 01
+C | p(C) = 1/4 | log(p(C)) = -2 | 10
+D | p(D) = 1/4 | log(p(D)) = -2 | 11
+\end{verbatim}
+
+La entropía para este alfabeto es de 2 (la media de muchos valores
+iguales es precisamente el valor de cada uno de ellos\ldots{} no
+necesitamos calcularlo). Y tiene sentido que necesitemos 2 bits para
+codificar nuestros 4 mensajes. Si ninguno de los mensajes es más
+probable que los demás, no hay ninguna información que podamos utilizar
+así que la mejor solución es utilizar nuestro clásico código de longitud
+fija.
+
+Ahora imaginemos que las probabilidades de los símbolos son diferentes.
+Pensad por ejemplo en las letras en un texto, algunas letras aparecen
+más a menudo que otras o, dicho de otra forma, algunas letras tienen una
+probabilidad más alta de aparecer en un mensaje.
+
+\begin{verbatim}
+A | p(A) = 1/2 | log(p(A)) = -1 
+B | p(B) = 1/4 | log(p(B)) = -2 
+C | p(C) = 1/8 | log(p(C)) = -3 
+D | p(D) = 1/8 | log(p(D)) = -3 
+\end{verbatim}
+
+La entropía para este alfabeto es: 0.4375. Vamos que estamos
+desperdiciando un montón de espacio utilizando una número fijo de bits
+para codificar esta información.
+
+Así que vamos a intentar asignar menos bits a los mensajes más probables
+(los que aparecen más a menudo), y dar más bits a los menos probables.
+Comenzaremos dándole el código \texttt{0} al mensaje \texttt{A}. El
+mensaje \texttt{B} es el siguiente, pero ya no le podemos dar solo un
+bit, porque sino, no podríamos decodificar el mensaje, así que le vamos
+a dar el código \texttt{10} (veremos por qué en un momento).
+
+Finalmente, los símbolos \texttt{C} y \texttt{D} son los menos probables
+y por lo tanto deben tener el código más largo, así que les asignaremos
+los valores \texttt{110} y \texttt{111} respectivamente. Nuestro código
+resultante es:
+
+\begin{verbatim}
+A | 0
+B | 10
+C | 110
+D | 111
+\end{verbatim}
+
+\emph{Fijaros que el número de bits que hemos asignado a cada símbolo se
+corresponde con la cantidad de información asociada a cada uno de ellos;
+1, 2, 3 y 3.}
+
+Este código no lo hemos creado de forma arbitraria, es un tipo especial
+de código conocido como
+\href{https://en.wikipedia.org/wiki/Prefix_code}{código prefijo}. Un
+código prefijo es un código de longitud variable en el que cada palabra
+código no es prefijo de ninguna otra. Lo que esto nos permite es poder
+decodificar los mensajes cuando recibimos los bits todos juntos sin
+ambiguedad posible. Por ejemplo, dada la secuencia de
+bits\texttt{0001101111011101110}, obtendremos el resultado:
+
+\begin{verbatim}
+0 0 0 110 111 10 111 0 111 0
+A A A C   D   B  D   A D   A
+\end{verbatim}
+
+Como podéis ver, esa es la única forma de decodificar la secuencia de
+bits inicial.
+
+Utilizando el teorema de codificación de fuente de Shannon, sabemos que,
+para este conjunto de símbolos, es posible codificar un mensaje
+suficientemente largo con \texttt{N\ *\ H(X)}. Más arriba vimos que la
+entropía de este alfabeto era de 0.4375. Puesto que tenemos 4 símbolos
+el número mínimo de bits por símbolo teórico que podemos alcanzar es:
+
+\begin{verbatim}
+N * H(X) = 4 * 0.4375 = 1.75
+\end{verbatim}
+
+Ahora calculemos la longitud media del código de longitud variable que
+hemos generado:
+
+\begin{verbatim}
+E{L} = 1*p(A) + 2*p(B) + 3*p(C) + 3*p(D) =
+     = 1*1/2  + 2*1/4  + 3*1/8  + 3*1/8  =  1.75
+     
+\end{verbatim}
+
+Es decir, el código que hemos calculado es el código óptimo para este
+conjunto de símbolos y tiene un nombre especial\ldots{}
+
+\hypertarget{cuxf3digos-de-huffman}{%
+\sectiontext{white}{black}{CÓDIGOS DE HUFFMAN}\label{cuxf3digos-de-huffman}}
+
+El código que hemos construido en la sección anterior es un tipo
+especial de código prefijo conocido como
+\href{https://en.wikipedia.org/wiki/Huffman_coding}{código de Huffman}.
+El código de Huffman es óptimo para un determinado alfabeto y se puede
+generar muy fácilmente utilizando un sencillo algoritmo (básicamente
+tenemos que construir un árbol binario usando las probabilidades):
+
+Comenzamos colocando todos los símbolos en una tabla ordenada por sus
+probabilidades:
+
+\begin{verbatim}
+Símbolo |    A   |    B   |    C  |    D  |
+--------+--------+--------+-------+-------+
+Prob    |   .5   |   .25  | 0.125 | 0.125 |
+\end{verbatim}
+
+A partir de aquí, construiremos el código de forma iteractiva, añadiendo
+un bit cada vez. Comenzamos eligiendo los dos símbolos con la
+probabilidad más baja. En este caso \texttt{C} y \texttt{D} y asignamos
+un bit a cada uno de ellos.
+
+\begin{verbatim}
+Símbolo |    A   |    B   |    C  |    D  |
+--------+--------+--------+-------+-------+
+Prob    |   .5   |   .25  | 0.125 | 0.125 |
+        |        |        |   0   |   1   |
+\end{verbatim}
+
+A continuación, asignamos al conjunto formado por esos dos símbolos la
+suma de las probabilidades de los símbolos originales,
+
+\begin{verbatim}
+Símbolo |    A   |    B   |    C  |    D  |
+--------+--------+--------+-------+-------+
+Prob    |   .5   |   .25  | 0.125 | 0.125 |
+        |        |        |   0   |   1   |
+        |   .5   |   .25  | 0.25  |       |
+\end{verbatim}
+
+Y repetimos el proceso añadiendo cada vez bits a la izquierda.
+
+\begin{verbatim}
+Símbolo |  A  |  B  |    C  |    D  | PASO |
+--------+-----+-----+-------+-------+------+
+Prob    | .5  | .25 | 0.125 | 0.125 |  0   |
+        |     |     |   0   |   1   |  1   |
+        | .5  | .25 | 0.25  |       |  2   |
+        |     |  0  |  10   |   11  |  3   |
+        | .5  | .5  |       |       |  4   |
+        |  0  | 10  |  110  |  111  |  5   |
+\end{verbatim}
+
+Realmente hemos construido un árbol binario, pero empezando desde abajo.
+
+\begin{verbatim}
+   A       B      C      D
+ .5|    .25|  .125|  .125|    0
+   |       |   '0'|   '1'|    1
+   |       |      +--+---+
+ .5|    .25|       .5|        2
+   |    '0'|      '1'|        3
+   |       +----+----+
+ .5|          .5|             4
+'0'|         '1'|             5
+   +------+-----+
+          | ROOT
+\end{verbatim}
+
+Ahora, si recorremos el árbol desde la raíz a cada uno de los símbolos,
+obtenemos los códigos que obtuvimos anteriormente. El hecho de que se
+trate de un árbol binario, nos asegura que se trata de un código
+prefijo\ldots{} simplemente por la forma de construirlo.
+
+Como podéis observar, dependiendo de como decidamos ir asignando los
+distintos bits, podemos obtener diferentes códigos. No solo eso, en
+casos más complejos en los que varios símbolos tienen la misma
+probabilidad, podremos agruparlos de diferentes formas y obtener código
+completamente distintos. Eso hace que un mismo alfabeto pueda producir
+diferentes códigos Huffman, dependiendo de como se asignen los bits.
+
+Veamos ahora como quedaría codificado un mensaje de ejemplo, utilizando
+nuestro código Huffman u un código de longitud fija:
+
+{\scriptsize
+\begin{verbatim}
+A  A  A  B  A  A  A  B  A  B  A  C   A  A  B  D   A  : 17 Símbolos
+00 00 00 01 00 00 00 01 00 01 00 10  00 00 01 11  00 : 34 bits
+0  0  0  10 0  0  0  10 0  10 0  110 0  0  10 111 0  : 25 bits
+\end{verbatim}
+}
+Pues parece que nos hemos ahorrado unos cuantos bits. En concreto
+necesitamos 25 bits para codificar 17 símbolos, lo que significa que
+hemos utilizado 1.47 bits por símbolo y hemos comprimido el mensaje algo
+más de un 25\%.
+
+\begin{entradilla}
+{\em Los códigos Huffman se utilizan junto con otros algoritmos como {\color{introcolor}LZW, JPEG o el formato Deflate}}
+\end{entradilla}
+
+Los códigos Huffman son más comunes de lo que podríais imaginas, si
+bien, no se utilizan como sistema de compresión, sino como una forma
+eficiente de codificar información normalmente como parte de un
+algoritmo de compresión más general. Por ejemplo, muchas
+implementaciones de LZ77 utilizan códigos Huffman para codificar las
+longitudes de las secuencias. JPEG, utiliza códigos Huffman para
+codificar los coeficientes de la DCT (realmente no es un código Huffman,
+sino código prefijo pre-calculado, pero se suelen referir a ellos de
+esta forma).
+
+\hypertarget{extensiuxf3n-de-fuente}{%
+\sectiontext{white}{black}{EXTENSIÓN DE FUENTE}\label{extensiuxf3n-de-fuente}}
+
+Una forma de comprimir todavía más un mensaje es utilizando una técnica
+que se conoce como extensión de fuente. El concepto es muy sencillo, en
+lugar de tomar símbolos aislados, los tomamos en grupos. Veamos como
+funciona esto con un sencillo ejemplo utilizando solo 2 símbolos.
+Imaginemos que nuestro sistema de comunicación utiliza los dos símbolos
+siguientes:
+
+\begin{verbatim}
+A -> p(A) = 3/4
+B -> p(B) = 1/4
+\end{verbatim}
+
+La entropía para este conjunto de símbolos es \texttt{0.81}, es decir,
+teóricamente podríamos comprimir nuestros mensajes para que, en media,
+cada símbolo utilice \texttt{0.81} bits\ldots{} Pero con solo dos
+símbolos, los únicos códigos que podemos generar son
+
+\begin{verbatim}
+     CÓDIGO 1 | CÓDIGO 2
+A ->     0    |    1
+B ->     1    |    0
+\end{verbatim}
+
+Entonces, como podemos acercarnos al límite teórico de Shannon indicado
+por la entropía. Bueno, una forma es extendiendo la fuente. En lugar de
+considerar los símbolos \texttt{A} y \texttt{B}, consideremos todas sus
+combinaciones:
+
+\begin{verbatim}
+AA -> p(A) * p(A) = 9/16
+AB -> p(A) * p(B) = 3/16
+BA -> p(B) * p(B) = 3/16
+BB -> p(B) * p(B) = 1/16
+\end{verbatim}
+
+Ahora podemos generar un nuevo código Huffman con estos nuevos valores
+de probabilidad:
+
+\begin{verbatim}
+AA -> p(AA) = 9/16  -> 0
+AB -> p(AB) = 3/16  -> 10
+BA -> p(BB) = 3/16  -> 110
+BB -> p(BB) = 1/16  -> 111
+\end{verbatim}
+
+En toda esta teoría siempre se asumen que los valores son independientes
+e idénticamente distribuidos. Esto simplemente significa que todos los
+valores siguen la misma distribución de probabilidades y su valor no
+depende de ningún otro valor. Esta es la razón por la que podemos
+calcular la probabilidad de dos símbolos consecutivos como el producto
+de las probabilidades de cada símbolo separado\ldots{} Cuando los
+valores (la variable aleatoria como le llaman en estadística) no cumplen
+esta propiedad\ldots{} bueno, las cosas se complican un poco más.
+
+Si ahora calculamos la entropía y longitud media del código obtendremos:
+
+\begin{verbatim}
+H = 1.62
+L = 9/16*1 + 3/16*2 + 3/16*3 + 1/16*4 = 1.68
+\end{verbatim}
+
+Como podéis ver, ahora estamos mucho más cerca del valor teórico. De
+hecho, el cociente entre la entropía y la longitud media del código mide
+la eficiencia del código. Para el primer caso teníamos:
+
+\begin{verbatim}
+0.81/1 = 0.81 -> 81%
+\end{verbatim}
+
+Mientras que ahora nuestro código tiene una eficiencia de:
+
+\begin{verbatim}
+1.62/1.68 = 0.96 -> 96%
+\end{verbatim}
+
+Observad que ahora, cada uno de nuestros símbolos incluye dos de los
+símbolos originales. Así que, respecto en media, estamos utilizando
+\texttt{1.68/2\ =\ 0.84} bits por cada uno de nuestos símbolos
+originales (\texttt{A} y \texttt{B}) y como podéis ver, este es un valor
+más cercano al valor de la entropía original.
+
+\begin{entradilla}
+{\em El {\color{introcolor}proceso de extension de fuente} nos permite acercarnos al {\color{introcolor}límite teórico de compresión} que marca el teorema de Shannon}
+\end{entradilla}
+
+Este proceso se puede extender varias veces (probad a generar el código
+para la extensión a 3 simbolos), si bien, la ganancia en compresión es
+cada vez menor con cada extensión. Si lo pensamos un poco, el algoritmo
+LZ del que hablamos al principio, en cierto modo, saca beneficio de este
+resultado ya que agrupa símbolos asignandole códigos más cortos cuanto
+más frecuentes son (cuanto más aparezcan en el mensaje a comprimir).
+
+\hypertarget{conclusiuxf3n}{%
+\sectiontext{white}{black}{CONCLUSIONES}\label{conclusiuxf3n}}
+
+En este artículo hemos repasado algunos de los métodos más comunes para
+comprimir datos sin pérdidas. Si bien existen muchos más tipos de
+algoritmos de compresión, estos tres que hemos discutido cubren un
+amplio espectro de los existentes. Los códigos Huffman basados en
+entropía, los códigos LZ basados en diccionario de palabras clave y
+otros algoritmos más intuitivos como RLE que no caen en una familia
+concreta.
+
+Nos hemos introducido tímidamente en el apasionante mundo de la teoría
+de la información y hemos visto como conceptos como la entropía y la
+longitud de los código se relacionan estadísticamente con los datos que
+queremos comprimir
+
+\end{multicols}

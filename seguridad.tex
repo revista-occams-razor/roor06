@@ -1,0 +1,656 @@
+\hypertarget{sec:criptografia1}{}\label{sec:criptografia}
+\pagestyle{seguridad}
+
+\rput(7.9,0.0){\resizebox{!}{16cm}{{\epsfbox{images/header-seguridad.eps}}}}
+
+\psset{fillstyle=solid}
+\psframe[fillcolor=black,opacity=0.6](2,-4.5)(17,0)
+
+
+
+
+% -------------------------------------------------
+% Cabecera
+\begin{flushright}
+
+
+{\color{green}\mtitle{10cm}{Introducción a la Criptografía}}
+
+\msubtitle{8cm}{Seguridad para meros mortales}
+
+{\sf\color{white}{ por Andrés ``Andy'' Pajaker}}
+
+%{\psset{linecolor=black,linestyle=dotted}\psline(-12,0)}
+\end{flushright}
+
+\vspace{2mm}
+% -------------------------------------------------
+
+
+
+%\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\footnotesize}
+\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\scriptsize}
+
+
+
+\intro{introcolor}{L}{o sepas o no, la criptografía forma parte de nuestro día a día desde
+hace ya algunos años, si bien, la mayoría de nosotros no sabemos muy
+bien como funciona o que es lo que se puede o no se puede hacer. Muchas
+compañías tratan de convencernos de lo seguras que son, simplemente
+afirmando que utilizan \emph{Criptografía fuerte} o \emph{Extremo a
+Extremo}\ldots{} Pero realmente sabes de lo que están hablando?\ldots{}}
+
+\begin{multicols}{2}
+
+La criptografía es un elemento esencial de las comunicaciones actuales.
+Prácticamente cualquier acceso a un servicio online está cifrado. Los
+datos almacenados en nuestros dispositivos también están cifrados. Los
+datos almacenados en la nube\ldots{} Pero eso no significa que estemos
+seguros.
+
+En este artículo os vamos a explicar como funciona la criptografía y
+como se utiliza en las comunicaciones, para que podáis entender mejor
+los riesgos a los que os enfrentáis cada día. Prometemos que el artículo
+va a ser muy sencillo para que cualquiera pueda entenderlo y al terminar
+de leerlo, tenga una idea muy clara de como funciona todo esto.
+
+\hypertarget{servicios-criptogruxe1ficos}{%
+\sectiontext{white}{black}{SERVICIOS CRIPTOGRÁFICOS}\label{servicios-criptogruxe1ficos}}
+
+Antes de entender como utilizamos criptografía en los servicios que
+utilizamos cada día, debemos entender los fundamentos básicos. Es decir,
+como funciona, no como crear nuestros propios sistemas
+criptográficos\ldots{} de eso ya se ocuparán otros colegas de Occam's.
+
+Cuando pensamos en criptografía lo primero que se nos viene a la mente
+son mensajes secretos. Y si, esa es, quizás, la primera aplicación de la
+criptografía y es, además, la operación fundamental en la que se basan
+las otras aplicaciones. En general, la criptografía busca ofrecernos las
+siguientes aplicaciones:
+
+\begin{itemize}
+
+\item
+  Privacidad. La privacidad es la propiedad de permite que cierta
+  información no pueda ser accedida por personas que no queramos. Esta
+  es la aplicación más común de la criptografía\ldots. cifrar datos de
+  forma que si no sabes la clave no podrás acceder a ellos.
+\item
+  Autenticación. Esta aplicación busca formas para asegurar que una
+  determinada persona (o sistema) es realmente quien dice ser. No
+  queremos que nadie se haga pasar por nosotros. Utilizamos los mismos
+  algoritmos, pero de una forma un tanto diferente.
+\item
+  Integridad. Esta aplicación busca asegurar que ciertos datos no han
+  sido modificados, al menos no por alguien no autorizado. Imaginad que
+  os mandan una factura por un servicio que habéis contratado, pero
+  alguien la intercepta, cambia el número de cuenta en el que tenéis que
+  pagar y luego os la envía. Los servicios de integridad nos permiten
+  saber si esa factura que recibimos ha sido modificada por un criminal
+  o no.
+\item
+  No repudiación de origen. Esta aplicación con un nombre tan curioso
+  busca asegurar que las acciones que realiza una cierta persona o
+  sistema las ha realizado esa cierta persona o sistema. Conceptualmente
+  es muy parecido a la autenticación , pero la no repudiación de origen
+  es un concepto un poco más amplio, aunque probablemente tendremos más
+  que suficiente con el resto de aplicaciones que hemos mencionado.
+\end{itemize}
+
+Ahora es un buen momento para explicaros los dos fundamentos
+criptográficos en los que se fundamentan todos estos servicios. Vamos
+allá.
+
+\hypertarget{fundamentos-criptogruxe1ficos}{%
+\sectiontext{white}{black}{FUNDAMENTOS CRIPTOGRÁFICOS}\label{fundamentos-criptogruxe1ficos}}
+
+La mayoría de las aplicaciones que hemos introducido en la sección
+anterior se basan en dos conceptos bastante sencillos: cifrado y
+hashing.
+
+El cifrado como todos sabéis consiste en transformar un determinado
+mensaje en otro utilizando alguna información secreta de forma que, si
+conocemos esa información secreta podemos obtener el mensaje inicial muy
+fácilmente, pero si no la conocemos (la información secreta o clave), es
+muy, muy difícil obtener el mensaje original.
+
+\begin{entradilla}
+{\em Los algoritmos criptográfico utilizan {\color{introcolor}funciones trampa} que resultan muy difíciles de invertir.}
+\end{entradilla}
+
+Matemáticamente esto se conoce como función trampa. Se trata de
+funciones que son muy fáciles de evaluar en una dirección, pero que
+calcular su inversa es muy difícil. Como dijimos que no íbamos a
+meternos en detalles escabrosos, aquí lo vamos a dejar.
+
+Un ejemplo de cifrado muy básico es el conocido como cifrado de César,
+atribuido a este general Romano. Este código, simplemente consiste en
+asignar un valor numérico a cada letra y generar el mensaje cifrado
+sumando un determinado número a la letra original. El número que sumamos
+es la clave. Imaginad que asignamos a la letra A el valor 1 y a la letra
+Z el 26. El 0 representará el espacio.
+
+\end{multicols}
+
+% TODO: Center this (Change to image)
+
+{\color{introcolor}{\hrule}}
+\begin{verbatim}
+        A B C D E F G H I J  K  L  M  N  Ñ  O  P  Q  R  S  T  U  V  W  X  Y  Z
+        1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
+\end{verbatim}
+{\color{introcolor}{\hrule height 1.5pt}}
+\textbf{Equivalencia caracteres números para cifrado César}
+{\color{introcolor}{\hrule height 1.5pt}}
+
+
+\begin{multicols}{2}
+Ahora podemos convertir cualquier mensaje en una secuencia de números.
+Por ejemplo:
+
+\begin{verbatim}
+H  O  L  A   M  U  N  D  O
+8  16 12 1 0 13 22 14 4  16
+\end{verbatim}
+
+Si ahora le sumamos dos a cada uno de esos número obtenemos:
+
+\begin{verbatim}
+H  O  L  A   M  U  N  D  O
+8  16 12 1 0 13 22 14 4  16
+10 18 14 3 2 15 24 16 6  18
+\end{verbatim}
+
+Y utilizando nuestra tabla que asocia letras y números obtenemos el
+mensaje:
+
+\begin{verbatim}
+H  O  L  A   M  U  N  D  O
+8  16 12 1 0 13 22 14 4  16
+10 18 14 3 2 15 24 16 6  18
+J  Q  N  C B Ñ  W  O  F  Q
+\end{verbatim}
+
+Así que \emph{HOLA MUNDO} se ha convertido en \emph{JQNCBÑWOFQ}\ldots{}
+Hemos cifrado nuestro mensaje y si no sabemos que tenemos que restarle
+dos a cada uno de los valores numéricos del texto cifrado no podemos
+recuperar el mensaje original. El código de César es muy sencillo y
+también muy malo, tiene muchos problemas como que es susceptible de
+ataques de fuerza bruta o puede ser cryptoanalizado\ldots{} Pero ya
+volveremos sobre esto más adelante.
+
+\begin{entradilla}
+{\em El sistema de cifrado simétrico más popular es {\color{introcolor}AES}}
+\end{entradilla}
+
+
+El algoritmo de cifrado simétrico más popular (y más seguro en 2024) es
+AES (\emph{Advanced Encryption Standar} o \emph{Estándar de Cifrado
+Avanzado}).
+
+\hypertarget{fundamentos-criptogruxe1ficos-2.-cifrado-asimuxe9trico}{%
+\sectiontext{white}{black}{CIFRADO SIMÉTRICO Y ASIMETRICO}\label{fundamentos-criptogruxe1ficos-2.-cifrado-asimuxe9trico}}
+
+Ahora que tenemos claro lo que significa cifrar y descifrar mensajes,
+tenemos que saber que hay dos formas fundamentales de hacerlo: cifrado
+simétrico y asimétrico.
+
+Un sistema de cifrado simétrico utiliza la misma clave para cifrar y
+descrifrar el mensaje. En nuestro ejemplo anterior utilizamos la clave
+\texttt{2} para cifrar nuestro mensaje utilizando el método de César y
+utilizamos el mismo valor \texttt{2} (el cual restamos al mensaje
+cifrado) para recuperar el mensaje original.
+
+Los sistemas simétricos son en los que la mayoría de nosotros pensamos
+cuando nos hablan de códigos y cifrados. Probablemente por que estamos
+acostumbrados de las películas donde tienen que conseguir una clave para
+acceder a ficheros, ordenadores o incluso habitaciones. Sin embargo
+existe otro tipo de cifrados que son lo que realmente han revolucionado
+las comunicaciones en los últimos años.
+
+\begin{entradilla}
+{\em Los {\color{introcolor}sistemas asimétricos utilizan claves distintas} para cifrar y descifrar}
+\end{entradilla}
+
+
+Los sistemas de cifrado asimétrico tienen dos claves y lo que nos
+permiten es que si ciframos un mensaje con una de las claves, solo
+podemos recuperarlo con la otra\ldots. y viceversa. Esto abre un sin fin
+de posibilidades para los fikis criptográficos. Las claves suelen
+recibir el nombre de clave pública y clave privada, ya que, normalmente,
+una de ellas la conoce todo el mundo, mientras que la otra es importante
+que no la conozca nadie.
+
+
+Veamos como funciona este sistema cuando queremos cifrar un mensaje. Con
+un sistema simétrico, debemos compartir la clave que usemos con la
+persona a la que le queremos enviar el mensaje\ldots{} pero con un
+sistema asimétrico la cosa es mucho más guay.
+
+Como la clave pública de cada persona es\ldots{} bueno\ldots{} pública.
+Vamos que la conocemos. Entonces solo tenemos que cifrar nuestro mensaje
+con la clave pública de la persona a la que se lo queremos enviar. Como
+el sistema es asimétrico, la única forma de descifrar el mensaje es
+utilizando la clave privada\ldots{} que solo esa persona conoce\ldots.
+Voilá. Veis la diferencia, con el sistema simétrico en el que tenemos
+que hacer llegar la clave a la otra persona de alguna forma. Si esa
+clave es interceptada mientras la intercambiamos, entonces el mensaje
+estará comprometido.
+
+Hay formas seguras de intercambiar claves\ldots{} pero de eso hablaremos
+más tarde.
+
+El algoritmo de cifrado asimétrico más famoso es RSA que toma su nombre
+de sus inventores: Rivest, Shamir y Adleman) y se basa, así a lo bestia,
+en la factorización de números primos muy grandes.
+
+
+\hypertarget{fundamentos-criptogruxe1ficos-3.-hashes}{%
+\sectiontext{white}{black}{HASHES}\label{fundamentos-criptogruxe1ficos-3.-hashes}}
+
+El otro concepto criptográfico que debemos introducir para entender
+muchos de los servicios seguros que existen hoy en día es el de las
+funciones hash.
+
+Una función \emph{HASH} es una función que es capaz de convertir una
+gran cantidad de datos que le pasamos como entrada en un número de un
+tamaño fijo. Pero este número tiene una propiedad muy especial. Si
+modificamos solo uno de los datos que le pasamos a la función como
+entrada el resultado será totalmente diferente y cambiará de una forma
+que no se puede predecir.
+
+\begin{entradilla}
+{\em Una {\color{introcolor}función hash} genera un valor de tamaño fijo a partir de un número arbitrario de datos}
+\end{entradilla}
+
+
+Las funciones \emph{hash} son la base de los sistemas de firma digital y
+de algunos métodos de autenticación modernos. Las funciones \emph{hash}
+normalmente utilizan la representación interna en binario de los
+números, ya que necesitan generar una salida de tamaño fijo. Para ver
+como funciona esto vamos a usar una función hash muy sencilla y mala,
+pero para entender el concepto nos va a valer.
+
+Tomemos la codificación de números y letras que usamos para nuestro
+código César y vamos a crear una función HASH que genere un \emph{HASH}
+de 2 caracteres. Para ello cogeremos los valores numéricos de 4 en 4 y
+los sumaremos y luego sumaremos los dígitos hasta obtener un número
+entre 0 y 9. Como nuestro mensaje tiene 9 caracteres, completaremos el
+último bloque con 0s.
+
+\begin{verbatim}
+H  O  L  A  
+7  15 11 0  
+M  U  N  D  
+12 21 13 3  
+O  
+15   0 0 0
+------------
+34 36 24 3
+8         <= 3+3+2  (Sumamos el 1er dígito)
+   17     <= 4+6+4+3(Sumamos el 2do dígito)
+8   8
+\end{verbatim}
+
+Así que ese sería nuestro Hash. Si ahora cambiamos nuestro mensaje a
+\emph{Mola Mundo}, es decir, hemos cambiado una sola letra del mensaje.
+
+\begin{verbatim}
+M  O  L  A
+12 15 11 0
+M  U  N  D
+12 21 13 3
+O
+15   0 0 0
+------------
+39 36 24 3
+11        <=  3 + 3 + 2 + 0
+   22     <=  9 + 6 + 4 + 3  
+2  4
+\end{verbatim}
+
+Como podéis ver, al cambiar la \texttt{H} por una \texttt{M}, el número
+que obtenemos es \texttt{24} en lugar de \texttt{88}. Esta función HASH
+es muy mala, o como dicen los expertos, no es criptográficamente segura,
+pero nos vale para entender la idea\ldots{} no?
+
+Unos de los algoritmos de hash más populares durante mucho tiempo fue
+MD5, pero hoy en día ya no se considera seguro y la familia de
+algoritmos SHA se usa en su lugar. SHA-2 en su versión de 256 o 512 bits es el más popular
+a fecha de hoy. Que una función hash no se considere segura significa
+que dado un resultado hash, es posible modificar el fichero original de
+tal forma que la función hash produzca el mismo resultado.
+
+\hypertarget{firma-digital}{%
+\sectiontext{white}{black}{FIRMA DIGITAL}\label{firma-digital}}
+
+Con todos estos fundamentos de criptografía que ya dominamos estamos en
+condiciones de entender como funciona una firma digital. Una firma
+digital nos permite verificar que un determinado mensaje, documento o
+información procede de una determinada persona y que además ese mensaje
+no ha sido modificado por una tercera parte.
+
+El concepto es muy sencillo:
+
+\begin{itemize}
+\item
+  Generamos un hash de los datos originales. En caso de que el documento
+  cambie, el hash cambiaría por completo
+\item
+  Firmamos el hash con nuestra clave privada. Esto permitirá a cualquier
+  que conozca nuestra clave publica desencriptar el hash y recalcularlo
+  para verificar que el documento no ha sido cambiado. Si alguien
+  intentara modificar el documento, podría generar un nuevo hash, pero
+  no podría encriptarlo ya que desconoce la clave privada del usuario original.
+\end{itemize}
+
+Como podéis ver, la idea es muy sencilla, pero muy potente.
+
+\begin{entradilla}
+{\em Los algoritmos de {\color{introcolor}firma digital} combinan el cifrado asimétrico con funciones hash}
+\end{entradilla}
+
+
+Así que si. Firmar digitalmente un documento no tiene nada que ver con
+añadirle una imagen con el escaneo de nuestra firma.
+
+\columnbreak
+
+\hypertarget{cifrado-punto-a-punto}{%
+\sectiontext{white}{black}{CIFRADO PUNTO A PUNTO}\label{cifrado-punto-a-punto}}
+
+El cifrado punto a punto (o \emph{End to End}, como dicen los
+americanos), se ha convertido en un eslogan de venta para ciertos
+productos, y es importante entender como funciona todo esto, para que no
+demos por supuesto cosas que no son. Lo que \emph{End to End}
+simplemente significa que los datos se cifran en un extremo y se
+descifran en el otro, de forma que da igual por cuantos puntos
+intermedios pase o si alguien consigue capturarlos mientras viajan por
+la red. Nadie podrá leer el contenido de nuestro mensaje.
+
+La forma de asegurar la privacidad entre dos puntos es utilizando un
+sistema de cifrado asimétrico. Cada parte cifra su mensaje con la clave
+pública de la persona que lo va a recibir, de forma que solamente esa
+persona pueda decodificar el mensaje.
+
+Hasta aquí todo claro, sin embargo hay algunas pequeñas cuestiones
+técnicas a tener en cuenta.
+
+\hypertarget{cifrado-asimuxe9trico-lento}{%
+\sectiontext{white}{black}{EL CIFRADO ASIMÉTRICO ES LENTO}\label{cifrado-asimuxe9trico-lento}}
+
+La primera es que los algoritmos de cifrado asimétrico son muy lentos y
+pesados y a día de hoy no son prácticos para cifrar grandes cantidades
+de datos, como documentos o ficheros multimedia. En estos casos, lo que
+se hace es generar una clave aleatoria para un sistema de cifrado
+simétrico, cifrar el documento usando esa clave y el sistema simétrico
+(por ejemplo AES-256) y añadir al mensaje esa clave, pero cifrada con la
+clave pública del destinatario. De esa forma, solo el destinatario puede
+recuperar la clave simétrica y acceder al documento.
+
+\begin{entradilla}
+{\em Los algoritmos de {\color{introcolor}cifrado asimétrico son muy lentos} y no se pueden utilizar para cifrar grandes cantidades de datos}
+\end{entradilla}
+
+
+Resumiendo cuando cifras un mensaje utilizando la clave pública de
+alguien utilizando, por ejemplo RSA, no estas cifrando todo el mensaje
+con el algoritmo RSA, solo una clave aleatoria que ha generado tu
+ordenador. Para transferir ficheros por, por ejemplo, mail, esto no es
+un gran problema, pero en comunicaciones más interactivas el uso de un
+algoritmo asimétrico para el cifrado de todos los datos es totalmente
+inviable.
+
+\hypertarget{quien-genera-las-claves}{%
+\sectiontext{white}{black}{¿QUIÉN GENERA LAS CLAVES?}\label{quien-genera-las-claves}}
+
+El sistema que hemos descrito es realmente muy seguro. Al menos es tan
+seguro como segura es tu clave privada. El gran problema con muchos
+servicios disponibles hoy en día es que realmente no sabemos como
+gestionan todo esto. Cuando inicias un chat en WhatsApp, un bonito
+mensaje diciendo que tus comunicaciones son seguras aparece en la
+pantalla. Pero que significa eso?
+
+Bueno, puesto que las claves no las podemos generar nosotros por
+nuestros propios medios (como por ejemplo en un ordenador aislado no
+conectado a ninguna red), y que el código de la aplicación es cerrado,
+no existe ninguna garantía de que la clave privada se haya generado en
+nuestro dispositivo y no en un servidor remoto y, aunque hubiera sido
+generada en nuestro dispositivo, tampoco tenemos ninguna garantía de que
+esa clave no se haya enviado a algún servidor remoto.
+
+Y que significa esto?\ldots{} Bueno, que cualquiera que tenga las claves
+privadas de alguien puede ver todos sus mensajes. Si este que tiene las
+claves es el servidor de WhatsApp, pues, aunque los mensajes y las fotos
+comprometedoras estén cifradas \emph{End to End}, WhatsApp va a verlo
+todo\ldots{}
+
+\hypertarget{grupos}{%
+\sectiontext{white}{black}{CHATS DE GRUPOS}\label{grupos}}
+
+Y que pasa con los grupos? Bueno, la verdad que no se como se implementa
+la encriptación en estos casos en cada una de las aplicaciones de chat
+ahí fuera. Si bien hay varias opciones, una de las mas sencillas (y
+aparentemente la usada por, por ejemplo WhatsAPP) es utilizar una clave
+simétrica para cifrar todos los mensajes y distribuir esa clave
+utilizando la clave privada de cada miembro cuando este se une al grupo.
+
+Hay esquemas más complejos como el que utiliza Signal, pero en general,
+la seguridad del grupo depende de mantener la clave utilizada para
+cifrar los mensajes del grupo segura, es decir, que solo salga del
+dispositivo que la creo, cifrada con la clave publica de los usuarios
+que deben usarla. Una vez más, si la aplicación que utilizamos es de
+código cerrado, no podemos tener la certeza de que esa clave no acabe
+siendo filtrada al servidor de la compañía que gestiona el servicio de
+alguna forma.
+
+\hypertarget{cifrado-punto-a-punto.-el-caso-del-correo}{%
+\sectiontext{white}{black}{CIFRADO PUNTO A PUNTO.\\EL CASO DEL CORREO}\label{cifrado-punto-a-punto.-el-caso-del-correo}}
+
+El cifrado punto a punto para el caso del correo electrónico es mucho
+más complicado e, independientemente de lo que se pueda decir por ahí,
+la única solución totalmente privada es utilizar GPG para cifrar tus
+correos en tu propio dispositivo.
+
+El problema con el correo es que no hay forma de asegurar que el sistema
+de correo que utilizan otras personas soporte encriptación. Así que si
+enviamos un mensaje a alguien que utiliza correo simple, el mensaje no
+puede estar cifrado, o de lo contrario esa persona no podrá leerlo. Esto
+tiene una serie de consecuencias:
+
+\begin{itemize}
+\item
+  La primera es que solo es posible enviar mensajes encriptados punto a
+  punto entre usuarios de una determinada plataforma
+\item
+  Cualquier mensaje desde un usuario utilizando una plataforma que
+  permite encriptación E2E a otro usuario de otra plataforma que no lo
+  soporte será visible por ambas plataformas de correo.
+\end{itemize}
+
+Esto último incluye respuestas y mensajes re-enviados. La plataforma
+proporcionando soporte para el cifrado podrá almacenar el mensaje
+cifrado, y lo enviará cifrado a su usuario, pero esa plataforma
+recibirá/enviará el mensaje en texto plano (sin cifrar).
+
+Esta es una limitación difícil de solucionar cuando un determinado
+servicio soporta distintos tipos de usuarios, unos que usan encriptación
+y otros que no.
+
+\hypertarget{cifrado-punto-a-punto.-sitios-web}{%
+\sectiontext{white}{black}{CIFRADO PUNTO A PUINTO.\\SITIOS WEB}\label{cifrado-punto-a-punto.-sitios-web}}
+
+El acceso a los sitios web está cifrado, siempre que utilicemos el
+protocolo HTTPS, lo cual hoy en día es lo habitual. La mayoría de los
+exploradores utilizan ese protocolo por defecto y si no está disponible
+muestran un aviso al usuario indicando que el sitio web al que intenta
+acceder es inseguro. Si bien, dependiendo del servicio que estemos
+intentando acceder, puede ser una exageración.
+
+Pero que significa que el acceso a un sitio web sea seguro?. Eso
+solamente significa que el tráfico desde nuestro explorador hasta el
+servidor está cifrado. En otras palabras cualquier entidad que vea el
+tráfico que va desde nuestra casa al servidor, no podrá ver que
+contiene. Eso incluye al ISP que nos da acceso a internet y todos los
+nodos intermedios de la red por lo que tengamos que pasar para alcanzar el
+servidor web.
+
+Si lo que estamos accediendo es un servicio de correo web, que ese
+enlace este cifrado es muy importante, ya que de lo contrario, cualquier
+que pueda ver el tráfico vería nuestros correos electrónicos, lo cual es
+algo que es considerado información privada.
+
+Sin embargo, si consideramos el acceso a un blog, o la página web de una
+distro linux que queremos bajar, en la que no vamos a intercambiar ningún
+tipo de información privada (no tenemos ni una cuenta en el sitio), pues
+nos da exactamente igual que el sitio web sea seguro o no. Lo que va
+a ver alguien que capture el tráfico es algo que puede ver sin más que
+acceder a la misma página web.
+
+Pensad en la web de nuestra revista. No necesitáis un usuario para
+registraros, ni enviar un correo electrónico o una clave. Simplemente
+buscáis un artículo y lo leéis. Poder ver vuestro tráfico al leer un
+artículo le va a permitir al atacante ver el artículo\ldots{} lo cual ya
+puede hacer. Lo único que va a ver el curioso es que artículos estás
+leyendo, lo cual rara vez es algo importante, pero bueno, es
+información.
+
+\hypertarget{como-funciona-https}{%
+\sectiontext{white}{black}{¿CÓMO FUNCIONA HTTPS?}\label{como-funciona-https}}
+
+Para entender mejor las consecuencias de seguridad de usar o no HTTPS,
+veamos primero como funciona. HTTPS es una extensión del protocolo HTTP,
+el protocolo original desarrollado para la web, la diferencia es que la
+información que se envía y recibe del servidor está cifrada utilizando
+una capa intermedia que puede ser \texttt{SSL} (\emph{Secure Socket
+Layer} o Capa de Conexiones Seguras) o \texttt{TLS} (\emph{Transport
+Layer Security} Seguridad de Capa de Transporte).
+
+Estas capas intermedias permiten establecer un diálogo inicial con el
+que intercambiar información sobre como establecer una comunicación
+segura.
+
+Lo primero que hacen estas capas es negociar una clave de sesión
+utilizando las claves públicas y privadas del cliente y el servidor.
+Estás claves están almacenadas en tu browser y no tienes ningún control
+sobre ellas, al menos no de forma directa. Es más, el browser podría
+generar uno de estos pares de claves pública y privada por cada
+conexión, ya que, en HTTPS, el extremo del explorador no necesita ser
+autenticado.
+
+Como ya hemos visto antes, esa clave de sesión se utiliza para cifrar el
+tráfico utilizando un algoritmo de cifrado simétrico, el cual también es
+negociado al principio de la sesión dependiendo de los algoritmos
+soportados por cada parte (ambos necesitan usar el mismo algoritmo
+además de la misma clave).
+
+\hypertarget{certificados}{%
+\sectiontext{white}{black}{CERTIFICADOS}\label{certificados}}
+
+Hemos dicho en la sección anterior que el browser no necesita
+autenticarse, pero en general, nosotros si que queremos que el servidor
+se autentique. Es decir, queremos estar seguros de que si vamos a
+acceder a nuestra cuenta bancaria a través de una página web, la página
+a la que estamos accediendo es la de nuestro banco, y no la de algún
+estafador que intenta robarnos los cuartos. Esta técnica se conoce como
+phising, y muy pronto verás porque funciona incluso con el sistema de
+autenticación que existe en la actualidad.
+
+\begin{entradilla}
+{\em Los {\color{introcolor}certificados} nos permiten verificar que alguién es quien dice ser.}
+\end{entradilla}
+
+Bien, la forma de verificar que un servidor web es quien dice ser es
+utilizando una firma digital. Nuestro banco nos va a enviar un fichero
+que dice: ``He soy tu banco. Créeme'' y eso lo va a firmar digitalmente
+utilizando su clave privada\ldots{}. El
+problema con este esquema es que si la clave publica compartida por el
+servidor viene del propio servidor\ldots{} bueno, la firma no vale nada
+en este caso. Sabemos que el mensaje proviene de ese servidor y que no
+ha sido modificado\ldots{} pero eso no nos dice nada sobre la veracidad
+de lo que el mensaje contiene.
+
+En general, un fichero con información sobre la identidad de \emph{algo}
+en internet que ha sido firmado digitalmente se conoce como certificado.
+Cuando el que emite el certificado es el mismo que lo firma, se dice que
+el certificado ha sido autofirmado, y eso es una posible brecha de
+seguridad. Esta situación es común durante desarrollo, ya que te da
+igual tener un certificado real o no cuando estás programando tu
+aplicación.
+
+Sin embargo, como ya os hemos dicho, cualquiera puede crear un
+certificado de esta forma, pero eso no nos asegura que el que emite el
+certificado sea realmente quien dice ser. Así que lo que necesitamos es
+una tercera entidad que de fe de quien es quien. Esta autoridad se
+conoce como \emph{Certification Authority} (Autoridad de Certificación,
+el nombre es super sorprendente eh?), y normalmente nos referiremos a
+ella como \texttt{CA},
+
+Así que cuando quieres un certificado para tu sitio web, le pides a una
+de estas CAs que genere un certificado para ti, el cual estará cifrado
+por esta CA, la cual es conocida por todos los exploradores. Ahora,
+cuando intentamos acceder a este sitio web, el certificado que
+recibimos, lo podemos verificar utilizando la \texttt{CA} la cual nos
+asegurará que el certificado es válido. Un certificado puede estar
+incluso firmado por más de una \texttt{CA}.
+
+\hypertarget{entonces-como-funciona-el-phising}{%
+\sectiontext{white}{black}{ENTONCES, ¿CÓMO PUEDE FUNCIONAR EL PHISING?}\label{entonces-como-funciona-el-phising}}
+
+Bueno, aquí esta el truqui. Si cualquier adquiere un dominio con un
+nombre muy parecido a otro, pero diferente\ldots{} bueno, esa persona
+puede aplicar por un certificado para ese dominio y se le concederá ya
+que todo está correcto. El dominio, las direcciones de correo,
+etc\ldots{} son todas distintas a las del dominio al que se parece, así
+que no hay ningún problema en emitir un certificado.
+
+El problema con el phising es que nos engañan utilizando un nombre muy
+parecido a otro real\ldots. Y que, seamos realista, comprobar el
+contenido del certificado no nos permite verificar de forma sencilla si
+el sitio es real o no. A ver es real, pero si es el que nosotros
+pensamos que es.
+
+
+
+Si pulsáis en el candado que aparece junto al nombre del sitio web al
+que queréis acceder, podréis, tras unos poco clicks, ver el certificado.
+La mitad de la información son números en hexadecimal que te dicen poco
+o nada sobre la identidad real del dueño del certificado. El resto
+parece información legal/empresarial. En otras palabras, los
+certificados de sitios web, para los meros mortales como nosotros, no
+son ninguna garantía de que estemos accediendo al sitio que queremos
+acceder.
+
+El sistema funciona, pero realmente no es útil. El certificado nos dice
+que estamos accediendo al sitio correcto. Y el sitio es correcto, lo que
+pasa es que han usado un nombre muy parecido al de otro sitio, y además
+han hecho que las páginas parezcan exactamente iguales, con lo que, a
+efectos prácticos asumiremos que estamos accediendo al sitio correcto,
+ya que la mayoría de la gente no va a ser capaz de extraer ninguna
+información útil del certificado.
+
+\begin{entradilla}
+{\em Los {\color{introcolor}ataques de PHISING} funcionan porque tener un certificado no significa ser quien intentas parecer ser.}
+\end{entradilla}
+
+
+Es decir, aunque chequees el certificado te vas a quedar igual que
+estabas. La mejor forma de defenderte contra el phising es no pulsar en
+ningún enlace recibido por correo o mensaje. Si tienes que hacer algo
+con tu banco, vete a la web de tu banco y haz lo que tengas que
+hacer\ldots. no uses enlaces que te lleguen por distintos medios.
+Incluso si parecen venir de una fuente fiable pueden ser falsos.
+
+
+\hypertarget{conclusiones}{%
+\sectiontext{white}{black}{CONCLUSIONES}\label{conclusiones}}
+
+En esta primera parte de esta breve introducción a la criptorgrafía para meros mortales hemos introducido los conceptos más generales relacionados con esta disciplina y algunos de los casos cotidianos en los que la utilizamos aunque no seamos conscientes de ello. Hemos intentado explicaros como se usa esta tecnología en aplicaciones y servicios que usamos todos los días para que así seáis más conscientes de los peligros de un uso incorrecto, o mejor aún, como usar los servicios de forma correcta y así permanecer seguros.
+
+En la próxima entrega os contaremos las formas en las que se pueden atacar este tipo de servicios y que hacer para que ese tipos de ataques no sean efectivos o al menos dificultarlos lo máximo posible.
+
+%\raggedcolumns
+%\clearpage
+\end{multicols}
+
+\rput(7.9,-3.7){\resizebox{!}{9cm}{{\epsfbox{images/promo/promo03.eps}}}}

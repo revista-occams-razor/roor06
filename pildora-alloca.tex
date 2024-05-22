@@ -1,0 +1,509 @@
+\hypertarget{pildoras:alloca1}{}\label{pildoras:alloca}
+\pagestyle{pvc}
+
+\rput(7.9,0.0){\resizebox{!}{16cm}{{\epsfbox{images/header-alloca.eps}}}}
+
+\psset{fillstyle=solid}
+\psframe[fillcolor=black,opacity=0.6](2,-4.5)(17,0)
+
+
+
+
+% -------------------------------------------------
+% Cabecera
+\begin{flushright}
+
+
+{\color{orange}\mtitle{14cm}{Pildoras de vitamina C: alloca}}
+
+\msubtitle{10cm}{Reserva memoria en la pila super rápido}
+
+{\sf\color{white}{ por Richi C. Poweri}}
+
+%{\psset{linecolor=white,linestyle=dotted}\psline(-12,0)}
+\end{flushright}
+
+\vspace{2mm}
+% -------------------------------------------------
+
+
+
+%\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\footnotesize}
+\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\scriptsize}
+
+
+
+
+\intro{introcolor}{L}{a función \texttt{alloca} no es muy conocida\ldots{}
+de hecho su uso no está recomendado puesto que su implementación depende
+de la máquina y compilador que usemos. Sin embargo, es una función muy
+potente y merece la pena conocerla ya que, cuando tenga sentido
+utilizarla puede ser un arma poderosa.}
+
+\begin{multicols}{2}
+
+La función \verb!alloca! simplemente reserva espacio
+en la pila, o en otras palabras, modifica el puntero de pila. Esa es la
+razón por la que es tan eficiente, y es la misma razón por la que
+depende de la plataforma. La otra gran ventaja de
+\verb!alloca! es que, puesto que solo modifica el
+puntero de pila, la memoria se libera automáticamente al salir de la
+función.
+
+\hypertarget{que-significa-reservar-memoria}{%
+\sectiontext{white}{black}{¿QUÉ SIGNIFICA RESERVAR MEMORIA?}\label{que-significa-reservar-memoria}}
+
+A no ser que ya sepas de que va esto de
+\verb!alloca!, y en ese caso seguro que ya no estás
+leyendo esto, quizás no tengas muy claro como funciona el proceso de
+reservar memoria. Aquí tienes un curso intensivo :)
+
+Cuando se lanza un proceso, el sistema operativo reserva varios bloques
+de memoria para su ejecución. Por una parte un bloque de memoria
+contendrá el código, otro los datos de solo lectura, otro las variables
+globales y otro la pila. Los dos primeros bloques son, en principio
+fijos, mientras que el tamaño de los dos últimos pueden variar durante
+la ejecución del programa.
+
+El bloque de datos se puede modificar con las llamadas al sistema
+\verb!brk!, mientras que la pila la modifica el
+programa a voluntad, básicamente modificando el puntero de pila.
+
+\begin{entradilla}
+{\em El {\color{introcolor}tamaño de la pila puede variar dinámicamente} durante la ejecución de un programa.}
+\end{entradilla}
+
+En general, la pila crece hacia las direcciones bajas (hay algunos
+procesadores en los que va al revés) y el segmento de datos crece hacia
+las direcciones altas. Por esa razón, la pila se inicia en la zona alta
+de la memoria, y el segmento de datos en la zona baja. De esta forma
+tenemos el mayor hueco posible entre ambas, para reservar memoria, ya
+sea en la pila o en el segmento de datos.
+
+\emph{NOTA:En realidad las librerías dinámicas se mapean en medio y
+medio de esa zona libre, pero eso no tiene relevancia para el tema que
+nos ocupa.}
+
+El mapa de memoria genérico de un proceso sería algo como esto:
+
+\begin{lstlisting}
+  +--------------------+
+  | Pila               | | Crece hacia abajo
+  +--------------------+ v
+  |                    |
+  ~ Memoria Libre      |
+  |                    |
+  +--------------------+ ^
+  | Segmento de Datos  | | Crece hacia arriba
+  +--------------------+
+  | Codigo + rodata    | rodata -> Datos solo-lectura
+  +--------------------+
+\end{lstlisting}
+
+\hypertarget{el-stack-frame}{%
+\sectiontext{white}{black}{EL STACK FRAME}\label{el-stack-frame}}
+
+Si eres uno de nuestros asiduos lectores seguro que ya sabes de que va
+esto del \emph{Stack Frame}, pero para los que recién os incorporáis,
+aquí tenéis una rápida introducción.
+
+Cada vez que ejecutamos una función, el compilador crea para nosotros lo
+que se conoce como un marco de pila (\emph{stack frame} en inglés). Este
+\emph{stack frame} (voy a usar el término inglés, por que el español la
+verdad que da miedito), comienza con la dirección de retorno, que no es
+otra que la dirección de la siguiente instrucción a la que contiene el
+salto a la función. Dependiendo del procesador esto sucede de distintas
+formas, por ejemplo, los x86 utilizan la instrucción
+\verb!call! que automáticamente añade la dirección de
+retorno a la pila. Otros procesadores almacenan la dirección en un
+registro especial y depende del programador hacer lo correcto con él.
+
+El compilar añade a todas las funciones (a no ser que le digamos lo
+contrario), lo que se conoce como el prólogo de la función, que no es
+más que un par de líneas de código para crear el stack frame (si, yo
+considero la dirección de retorno parte del \emph{stack frame}, pero eso
+es discutible). Este prólogo, normalmente almacena el valor del registro
+de pila (que apunta a la siguiente posición disponible en la pila) en un
+registro auxiliar que se suele conocer como registro base y que para los
+procesadores intel ha sido tradicionalmente el
+\verb!BP! (\emph{Base Pointer} ). A continuación
+modifica el registro de pila para reservar espacio para las variables
+locales.
+
+El registro base \verb!RBP! marca el comienzo de la
+zona de la pila asociada a esta función. Por esa razón debemos
+almacenarlo en algún sitio antes de modificarlo\ldots{} bueno, la razón
+es que si nuestra función ha sido llamada por otra función, al entrar en
+ella, \verb!RBP! apunta al \emph{stack frame} de la
+función que llama, y cuando terminemos de ejecutar nuestra función
+queremos restaurarlo, para que al retornar la función llamante pueda
+continuar su ejecución\ldots{} es decir, encuentre sus variables locales
+y su dirección de retorno.
+
+El código del prólogo es normalmente algo como esto:
+
+\begin{lstlisting}
+push RBP
+mov  RBP, RSP
+sub  RSP, ESPACIO_VARIABLES_LOCALES
+\end{lstlisting}
+
+Lo que nos deja la pila de esta forma
+
+\begin{lstlisting}
+ | RET  | 
+ | RBP  |
+ |      | <--- RBP
+ ~ ...  ~
+ |      | <--- RSP = RBP - ESPACIO_VARIABLES
+\end{lstlisting}
+
+Como podéis ver, las variables locales se reservan en la pila,
+simplemente haciendo hueco (cambiando el valor del puntero de pila). De
+esta forma, podemos acceder a las variables locales de la función, con
+simples deplazamientos en el registro base (en realidad utilizando
+direccionamiento indexado sobre él).
+
+Este código va acompañado de un epilogo, al final del la función, que
+simplemente hace lo siguiente:
+
+\begin{lstlisting}
+mov RSP, EBP
+pop RBP
+ret
+\end{lstlisting}
+
+En otras palabras, restauramos nuestro puntero de pila al valor que
+tenía justo al entrar en la función, y restauramos el registro base con
+el \emph{stack frame} anterior que habíamos almacenado en la
+pila\ldots{} Tras eso, el valor al que apunta
+\verb!RSP! es la dirección de retorno, con lo que
+\verb!ret! retornará al lugar adecuado.
+
+\begin{entradilla}
+{\em El {\color{introcolor}código que genera el Stack Frame} de una función se conoce como prologo}
+\end{entradilla}
+
+Los procesadores intel incorporan instrucciones para hacer estas dos
+cosas de forma automática. Las instrucciones
+\verb!enter! y \verb!leave!
+respectivamente ejecutan el prólogo y epilogo de la función. En general,
+\verb!enter! no se utiliza ya que es menos eficiente
+que el código que os mostramos más arriba, así que raramente lo veréis
+en código real.
+
+Esta sencilla estructura nos permite anidar fácilmente funciones y es la
+base sobre la que se pueden construir funciones recursivas.
+
+\hypertarget{alloca-again}{%
+\sectiontext{white}{black}{\texorpdfstring{\texttt{alloca}
+AGAIN}{alloca again}}\label{alloca-again}}
+
+Pues, después de todo este rollo, ya os podéis imaginar que es lo que
+hace \verb!alloca!\ldots{} simplemente, modifica el
+puntero de pila, para hacer más hueco. Si tomamos como ejemplo el
+diagrama de pila anterior y suponemos que ejecutamos la función
+\verb!alloca (128)!, se nos quedaría tal que así:
+
+\begin{lstlisting}
+ | RET  | 
+ | RBP  |
+ |      | <--- RBP
+ ~ ...  ~
+ |      | <--- Termina ESPACIO_VARIABLES
+ ~ 128  ~
+ | bytes|
+ |      | <-- RSP
+\end{lstlisting}
+
+Como podéis ver, cuando se ejecuta el epílogo de la función, el puntero
+de pila, simplemente se resetea (se sobre escribe con el valor de
+\verb!RBP!) y como resultado, toda la memoria está
+ahora disponible de nuevo para utilizarla con otro
+\verb!alloca! u otra \emph{Stack Frame}.
+
+Esta es la razón por la que \verb!alloca! es tan
+eficiente, básicamente hace una suma o una resta\ldots. Para
+asegurarnos, veamos que genera \verb!gcc! para la
+siguiente sencilla función:
+
+\begin{lstlisting}[language=C]
+void* func () {
+  char *ptr;
+  ptr = alloca (1024);
+  memset (ptr, 0, 1024);
+  return ptr;
+}
+int main () { func (); return 0;}
+\end{lstlisting}
+
+{\em{Nota: El {\verb!memset!} es necesario para que al
+optimizar el código el compilador se de cuenta que hacemos algo con
+{\verb!ptr!} y no lo elimine}.}
+
+Si compilamos nuestro programa con la optimización `-O1':
+
+\begin{lstlisting}
+gcc -O1 -o alloca-test alloca-test.c
+\end{lstlisting}
+
+La función \verb!func! se quedaría más o menos así:
+
+\begin{lstlisting}
+<func>:
+    push   rbp
+    xor    eax,eax
+    mov    ecx,0x80
+    mov    rbp,rsp
+    sub    rsp,0x410
+    lea    rdx,[rsp+0xf]
+    and    rdx,0xfffffffffffffff0
+    mov    rdi,rdx
+    rep stos QWORD PTR es:[rdi],rax
+    mov    rax,rdx
+    leave
+    ret
+\end{lstlisting}
+
+\hypertarget{analizando-el-cuxf3digo-generado}{%
+\sectiontext{white}{black}{ANALIZANDO EL CÓDIGO GENERADO}\label{analizando-el-cuxf3digo-generado}}
+
+Si reordenamos un poco el código\ldots{}
+
+\begin{lstlisting}
+    push   rbp
+    mov    rbp,rsp
+    sub    rsp,0x410
+    
+    lea    rdx,[rsp+0xf]
+    and    rdx,0xfffffffffffffff0
+        
+    xor    eax,eax
+    mov    ecx,0x80     
+    mov    rdi,rdx
+    rep stos QWORD PTR es:[rdi],rax
+    mov    rax,rdx
+    
+    leave
+    ret
+\end{lstlisting}
+
+Ahora podemos ver claramente el prólogo de la función y como reservamos
+espacio para los 1024 bytes reservados con
+\verb!alloca! y 16 bytes más para almacenar el
+puntero\ldots{} que para una arquitectura de 64 bits debe estar alineado
+a 16 bytes\ldots{} aunque solo usemos 8.
+
+Las dos instrucciones siguientes se encargan de alinear el puntero en la
+zona de la pila reservada. Veamos como está la pila justo después del
+prólogo, para entender que está pasando:
+
+\begin{lstlisting}
+  | RET     |
+  | RBP     | <- RBP
+  |         |
+  ~ ....    ~ <= 0x400 bytes de alloca
+  |         | <= 0x10 bytes para el puntero
+  |         | <- RSP = RBP - 0x410
+\end{lstlisting}
+
+Lo que el compilador ha hecho es reservar \verb!0x10!
+bytes para almacenar nuestro puntero que realmente solo necesita 8 bytes
+en lugar de 16, para a continuación calcular la dirección de entre esas
+16 que esté alineada a 16 bytes. Para ello lo que hace es lo siguiente:
+sumar 15 y luego borrar los últimos 4 bytes (o dividirlo por 16 si
+preferís)\ldots. que efectivamente significa alinear a 16 bytes (4 bits
+-\textgreater{} 16 valores).
+
+\begin{entradilla}
+{\em Para {\color{introcolor}máquinas {\verb!x86_64!} utilizan 16 bytes} para el alineamiento de memoria en la pila}
+\end{entradilla}
+
+
+Imaginad que el valor de \verb!RSP! después de
+reservar la memoria es por ejemplo \verb!0x01412!, lo
+que significa que nuestro buffer está en
+\verb!0x01432!\ldots{} por lo que tenemos que elegir
+una dirección entre esas dos que esté alineada a 16 bytes\ldots{} o lo
+que es lo mismo que los últimos 4 bits sean cero.
+
+Podríamos pensar en simplemente borrarlos\ldots{} eso nos daría como
+resultado\verb!0x01410! que está fuera de nuestro
+rango (fuera de la pila), así que lo que hacemos es sumar 15\ldots{} de
+forma que nos aseguramos que vamos a quedarnos en el rango
+disponible\ldots{} pero sin tocar el buffer:
+
+\begin{lstlisting}
+  0x001412 + 0xf = 0x001421
+\end{lstlisting}
+
+Si ahora borramos los últimos 4 bits, obtenemos la dirección
+\verb!0x001420!, que se encuentra en el rango
+adecuado de nuestra pila, nos da espacio suficiente para almacenar
+nuestro puntero de 8 bytes y además está alineado con la pila a 16
+bytes.
+
+
+El resto del programa no es más que la versión \emph{inline} de
+\verb!memset!\ldots{} El único comentario es que
+\verb!stos! en el código generado, usa registros de
+64 bytes, por lo que el contador en \verb!rcx! es
+solo 0x80 (0x80 * 8 = 0x400 = 1024)\ldots{} vamos que copia de 8 en 8
+bytes.
+
+\hypertarget{stack-vs-heap.-fight}{%
+\sectiontext{white}{black}{STACK vs HEAP\ldots. FIGHT!}\label{stack-vs-heap.-fight}}
+
+Probablemente siempre has escuchado que la forma de reservar memoria en
+C es utilizando las funciones \verb!malloc! y
+\verb!free!. Si bien eso es lo normal, como hemos
+visto el proceso de reservar memoria es un poco más complicado que eso.
+Así que vamos a describir rápidamente como funcionan esas dos funciones.
+
+Ya hemos hablado brevemente del segmento de datos y como modificarlo.
+Esa es la forma más sencilla de implementar un sistema de gestión de
+memoria dinámico. De hecho es un buen ejercicio. Si lo hacéis, veréis
+que hay muchos problemas que tener en cuenta y que no es nada fácil
+hacer uno de estos sistemas que funcione decentemente en cualquier
+situación.
+
+Esa es la razón por la que la librería C de GNU no implementa una única
+estrategia para reservar memoria aunque nosotros, como programadores, no
+lo vemos. Esto lo podemos dejar para otro artículo en el futuro, ya que
+el funcionamiento interno del sistema de gestión de memoria es
+fundamental para entender ciertos ataques como los \emph{heap
+overflows}, \emph{out by one},\ldots{} relacionados con el \emph{heap}.
+
+Para terminar, deciros que existe otra forma más de reservar memoria (de
+hecho la implementación de \verb!malloc! de la
+librería estándar también la utiliza), y no es otra que la llamada al
+sistema \verb!mmap!. \verb!mmap!
+nos permite reservar bloques de memoria, con permisos específicos e
+incluso, mapearlos en direcciones específicas\ldots{} todo esto con
+algunas limitaciones\ldots. Parece una auténtica pasada no? Os
+preguntaréis porque no usamos \verb!mmap! y ya
+está\ldots{} bueno, hay distintas razones, pero lo fundamental es que
+\verb!mmap! trabaja sobre páginas de memoria, no
+sobre direcciones. Lo que significa que si necesitamos 8 bytes,
+tendremos que reservar 4K (o el tamaño de página que sea que utilice el
+OS).
+
+Como podéis ver, no existen las panaceas. Cada técnica tiene sus pros y
+sus contras y por ello debemos conocerlas todas para poder elegir la más
+adecuada.
+
+\hypertarget{problemas-con-alloca}{%
+\sectiontext{white}{black}{\texorpdfstring{PROBLEMAS CON \texttt{alloca}}{Problemas con alloca}}\label{problemas-con-alloca}}
+
+Para terminar este artículo, vamos a discutir brevemente los problemas
+que os podéis encontrar con \verb!alloca!. La función
+no tiene ningún problema, y usada con cuidado puede hacer que nuestro
+programa sea mucho más eficiente, pero si nos despistamos, puede hacer
+que el programa falle de formas poco obvias.
+
+Lo primero que tenemos que entender es que, en contra de lo que podría
+parecer, \verb!alloca! no es una versión optimizada
+de \verb!malloc!, aunque se use con ese objetivo. La
+principal consecuencia de esto es que objetos creados con
+\verb!alloca! no pueden ser utilizados fuera de la
+función como ocurre con la memoria reservada con
+\verb!malloc!.
+
+\begin{entradilla}
+{\em La memoria reservada con \texttt{alloca} se encuentra en la pila y por tanto se {\color{introcolor}libera automáticamente} al abandonar la función.}
+\end{entradilla}
+
+Lo segundo es que la memoria reservada con
+\verb!alloca! no hay que liberarla como ocurre con la
+memoria reservada con \verb!malloc!. De hecho,
+ejecutar \verb!free! sobre un bloque de memoria
+reservado por \verb!alloca! puede ser fatal. La
+memoria reservada con \verb!alloca! se libera de
+forma automática al dejar la función (como hemos visto antes).
+
+\verb!alloca! puede producir desbordamientos de pila,
+ya que la implementación muchas veces no hace ningún tipo de
+comprobación sobre los parámetros. De esta forma, si pasamos un valor
+negativo, por ejemplo, podríamos sobre escribir el \emph{stack frame} de
+la función y hacer que el programa se estrelle\ldots{} Probad a escribir
+\verb!alloca(-1024);! en nuestro programa de ejemplo
+y observad que código se genera.
+
+De la misma forma, utilizar valores muy grandes nos puede llevar fuera
+del bloque de memoria asociado a la pila y provocar un fallo de
+segmentación\ldots. Sí, la pila no puede crecer indeterminadamente en el
+hueco libre en medio del espacio de direccionamiento del proceso,
+especialmente en un sistema multi-proceso. El segmento de pila tiene un
+tamaño y si nos pasamos de él se producirá una violación de segmento.
+Para ver donde se encuentra la pila para un determinado proceso podéis
+mirar el mapa de memoria del proceso en
+\verb!/proc/PID/maps! donde
+\verb!PID! es el identificador del proceso.
+
+Otra cosa a tener en cuenta es que utilizar
+\verb!alloca! solo tiene sentido cuando no conocemos
+el tamaño del bloque a reservar, ya que de lo contrario simplemente
+deberíamos declarar una variable local del tamaño adecuado. La principal
+ventaja de declarar la variable es que el compilador podrá hacer un
+mejor trabajo detectando posible bugs.
+
+\hypertarget{siendo-portables}{%
+\sectiontext{white}{black}{SIENDO PORTABLES}\label{siendo-portables}}
+
+A partir de la versión 99 de C, lo que se conoce como C99, el estándar
+incluye las llamadas matrices de longitud variable o VLA, de sus siglas
+en inglés \emph{Variable Length Array}. Básicamente funcionan como
+\verb!alloca!, pero de forma estándar y añadiendo
+algo más de seguridad. Una vez más, al igual que sucede con
+\verb!alloca!, esto solo tiene sentido cuando debemos
+reservar un bloque de memoria de longitud variable (de ahí su
+nombre)\ldots{} de lo contrario, simplemente declaramos la variable como
+global y ya acabará en la pila directamente.
+
+\begin{entradilla}
+{\em La {\color{introcolor}función \texttt{alloca} no es portable}, pero C99 introdujo los VLAs.}
+\end{entradilla}
+
+El siguiente código muestra como utilizar esta construcción introducida
+en C99 aunque gcc ya ofrecía esta funcionalidad como una extensión antes
+de que fuera incorporada al estándar:
+
+\begin{lstlisting}[language=C]
+int func (int n) {
+  char ptr[n];
+  memset (ptr, 0, n);
+  return 0;
+}
+\end{lstlisting}
+
+Como podéis ver, simplemente declaramos el array que necesitamos, pero
+ahora podemos utilizar una variable para indicar su longitud. Esto no
+era posible en versiones anteriores de C y este tipo de código requería
+del uso de \verb!malloc!.
+
+Si le echáis un ojo al ensamblador generado, es bastante más complicado
+que simplemente que el generado para \verb!alloca!,
+pero ese suele ser el precio a pagar por la portabilidad.
+
+Como nota final, comentaros que los \verb!VLA!s no se
+utilizan en el kernel Linux desde la version 4.20 debido a la baja
+calidad del código generado para tamaños pequeños del VLA.
+
+\hypertarget{conclusiones}{%
+\sectiontext{white}{black}{CONCLUSIONES}\label{conclusiones}}
+
+Bueno, hasta aquí esta pequeña introducción a la función
+\verb!alloca! y una no tan pequeña digresión sobre la
+gestión de memoria en procesos. Conocer los detalles de como funciona la
+gestión de memoria nos hace más fácil entender lo que hacemos en cada
+momento y reducir los bugs en nuestros programas.
+
+\verb!alloca!, si bien , no debería ser tu primera
+opción para manejar la memoria de tu programa, puede ser una
+optimización muy interesante en algunos casos cuando es usada con
+cuidado.
+
+\end{multicols}
+
+%\includegraphics[width=.9\linewidth]{images/promo/promo01.eps}
+\rput(7.9,-3.8){\resizebox{!}{9.2cm}{{\epsfbox{images/promo/promo01.eps}}}}

@@ -1,0 +1,156 @@
+\rput(2.5,-1.5){\resizebox{!}{4.5cm}{{\epsfbox{images/general/trucos1.eps}}}}
+\hypertarget{trucos1}{}\label{trucos}
+
+\pagestyle{trucos}
+
+
+% -------------------------------------------------
+% Cabecera
+\begin{flushright}
+
+
+{\color{introcolor}\mtitle{8cm}{Con un par... de líneas}}
+
+\msubtitle{5cm}{Los Mejores Trucos}
+
+{\sf por Tamariz el de la Perdiz}
+
+{\psset{linecolor=black,linestyle=dotted}\psline(-12,0)}
+\end{flushright}
+
+\vspace{2mm}
+% -------------------------------------------------
+
+\begin{multicols}{2}
+
+%\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\footnotesize}
+\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\scriptsize}
+
+
+
+\hypertarget{documentos-here-y-luxedneas-here}{%
+\sectiontext{white}{black}{DOCUMENTOS HERE Y LÍNEAS HERE}\label{documentos-here-y-luxedneas-here}}
+
+Probablemente conozcas los documentos \texttt{HERE}. Una forma comoda de
+hacer que nuestros scripts escriban varias lineas en pantalla de una
+sola vez.
+
+\begin{verbatim}
+echo << EOM
+Esto son varias lineas que podemos imprimir
+Todo lo que escribamos hasta la marca
+aparecera en la consola
+EOM
+\end{verbatim}
+
+Tambien los podemos utilizar para generar ficheros cuando no tenemos un
+editor de textos
+
+\begin{verbatim}
+cat << EOM  > hola.c
+> #include <stdio.h>
+> int main(void) { puts("Hola Mundo");}
+> EOM
+\end{verbatim}
+
+Pero en ocasiones solamente necesitamos una línea. Los siguientes
+comandos son equivalentes en bash
+
+\begin{verbatim}
+$ base64 <<< "Codifica esto en base64"
+$ echo "Codifica esto en base64" | base64
+\end{verbatim}
+
+Finalmente, la sustitución de procesos nos permite utilizar la entrada o
+la salida de un comando como entrada o salida de otro. La sustitución de
+procesos crea un \texttt{pipe} con el que redirigir la entrada o salida
+de procesos. Veamos un par de ejemplos
+
+Un ejemplo clásico del uso de este operador es la comparación de la
+salida de dos procesos. En general, para poder hacer eso, deberiamos
+redireccionar la salida de cada proceso a un fichero y luego comparar
+esos ficheros. Pero en su lugar podemos hacer lo siguiente.
+
+\begin{verbatim}
+$ diff <(cmd1) <(cmd2)
+\end{verbatim}
+
+Observad que no hay espacio entre \texttt{\textless{}} y \texttt{(}. De
+la misma forma podemos redireccionar la salida de un comando
+
+{\footnotesize
+\begin{verbatim}
+$ echo "Hola mundo" | tee >(md5sum) >(sha256sum)
+\end{verbatim}
+}
+
+En este caso el problema esta en que \texttt{tee} espera un fichero como
+parámetro, no un comando y por lo tanto no podriamos enciar nuestra
+cadena de texto a los dos programas que calculan el hash.
+
+\hypertarget{lista-errores-del-sistema}{%
+\sectiontext{white}{black}{LISTA DE ERRORES DEL SISTEMA}\label{lista-errores-del-sistema}}
+
+Durante el desarrollo de programas en C es normal obtener errores como
+valores numericos en la variable global \texttt{errno}. Podemos utilizar
+la función \texttt{perror} para traducirlos en una cadena comprensible
+para nosotros, o podemos utilizar el comando \texttt{errno} para
+traducirlos\ldots{} en caso de que, por ejemplo, el programador de
+alguna utilidad simplemente nos devuelva un críptico \texttt{error\ 10}
+
+{\small
+\begin{verbatim}
+$ errno -l  # Muestra todos los errores del sistema
+$ errno 10  # Muestra descripcion del error 10
+ECHILD 10 No child processes
+$ errno EAGAIN # Muestra descripcion del error EAGAIN
+EAGAIN 11 Resource temporarily unavailable
+\end{verbatim}
+}
+
+Si el programa no está instalado, podréis encontrarlo en el paquete
+\texttt{moreutils} al menos en la distribucion Debian.
+
+\hypertarget{ejecutar-comandos-desde-tu-editor-de-textos-sobre-documento}{%
+\sectiontext{white}{black}{EJECUTAR COMANDOS DIRECTAMENTE SOBRE TU TEXTO}\label{ejecutar-comandos-desde-tu-editor-de-textos-sobre-documento}}
+
+Sabias que puedes ejecutar comandos shell sobre bloques de texto que
+estas editando en vim. Por ejemplo, puedes ordenar alfabeticamente una
+lista que hayas escrito desordenada en tu documento utilizando el
+comando:
+
+\begin{verbatim}
+:%!cmd
+\end{verbatim}
+
+El \texttt{\%} significa aplicar el comando a todo el fichero, pero
+tambien podeis usarlo en modo visual.
+
+EN emacs podies hacer lo mismo utilizando el siguiente comando.
+
+\begin{verbatim}
+CTRL + U  ALT + | cmd
+\end{verbatim}
+
+\hypertarget{servidor-ftp-temporal}{%
+\sectiontext{white}{black}{SERVIDOR FTP TEMPORAL}\label{servidor-ftp-temporal}}
+
+Hay muchas formas de transferir ficheros rápidamente entre ordenadores
+de una red. Aquí os traemos una opción más, utilizando el modulo
+\texttt{pyftplib}. Poner en marcha un servidor web es tan sencillo como
+esto.
+
+\begin{verbatim}
+$ python -m pyftpdlib --directory=FTP \\
+         --port=2121 --write
+\end{verbatim}
+
+Para acceder al servidor utilizad el nombre de usuario \texttt{anon}
+
+Podéis instalar \texttt{pyftplib} con el comando.
+
+\begin{verbatim}
+$ pip install --user pyftpdlib
+\end{verbatim}
+
+\end{multicols}

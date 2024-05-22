@@ -1,0 +1,689 @@
+
+\hypertarget{geek:bf1}{}\label{geek:bf}
+\pagestyle{geek}
+
+\rput(6.0,-1.7){\resizebox{!}{11.5cm}{{\epsfbox{images/header-geek.eps}}}}
+
+\psset{fillstyle=solid}
+\psframe[fillcolor=black,opacity=0.4](2,-4.5)(17,0)
+
+
+% -------------------------------------------------
+% Cabecera
+\begin{flushright}
+
+
+{\color{violet}\mtitle{12cm}{Interprete BrainFuck. Parte I}}
+
+\msubtitle{6cm}{En ensamblador RISC-V}
+
+{\sf\color{white}{ por Don Bit0}}
+
+%{\psset{linecolor=black,linestyle=dotted}\psline(-12,0)}
+\end{flushright}
+
+\vspace{2mm}
+% -------------------------------------------------
+
+
+
+%\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\footnotesize}
+\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\scriptsize}
+
+
+
+
+\intro{introcolor}{I}{niciamos una nueva sección en la que vamos a hacer cosas muy geeks y
+empezamos con un artículo que creemos reflejará muy bien la filosofía de
+esta sección. Vamos a programar un intérprete del lenguaje esotérico
+\emph{BrainFuck} en ensamblador RISC-V\ldots{} por que?\ldots{} pues
+porque podemos :)}
+
+\begin{multicols}{2}
+Para los que no conozcáis brainfuck, bueno enseguida entenderéis de
+donde viene el nombre. Es quizás el lenguaje esotérico más conocido y
+emblemático, además de raro de narices. Para los que no conozcáis
+RISC-V, pues se trata de una arquitectura de procesadores RISC que tiene
+la peculiaridad de estar libre de licencias, lo que permite a cualquier
+desarrollar libremente su propio procesador basado en esa arquitectura.
+
+Arquitecturas como ARM por ejemplo requiere que los desarrolladores de
+procesadores basados en ARM paguen una licencia. Los usuarios finales no
+nos enteramos, pero para los desarrolladores de HW es un coste a tener
+en cuenta.
+
+Sin más preámbulos vamos a contaros que es BrainFuck, las peculiaridades
+de RISC-V y ponernos al tajo. Vamos a ir construyendo el programa con
+pasos reproducibles que podáis seguir y que os ayuden a depurar el
+programa en caso de que tengáis cualquier problema\ldots{} Y como
+siempre, no dudéis en poneros en contacto con nosotros ;)
+
+\hypertarget{brainfuck}{%
+\sectiontext{white}{black}{BRAINFUCK}\label{brainfuck}}
+
+BrainFuck es uno de los lenguajes esotéricos más emblemáticos.
+Probablemente el más conocido. Si queréis conocer más sobre su historia,
+la página de la \href{https://en.wikipedia.org/wiki/Brainfuck}{wikipedia}
+contiene toda la información
+que podáis buscar. En este artículo nosotros solo vamos a explicaros la
+sintaxis del lenguaje de forma que el artículo sea auto-contenido.
+
+\begin{entradilla}
+{\em {\color{introcolor}BrainFuck} es uno de los {\color{introcolor}lenguajes esotéricos} más conocidos}
+\end{entradilla}
+
+El lenguaje está compuesto por 8 caracteres que funcionan sobre una,
+digamos, máquina virtual muy sencilla. Esta máquina define una zona de
+memoria en la que se almacena el programa (una secuencia de los 8
+caracteres que describiremos a continuación), y otra zona de memoria en
+la que se almacenan datos.
+
+La máquina dispone de dos registros. Un contador de programa, que apunta
+a la instrucción del lenguaje que estamos ejecutando (en la primera zona
+de memoria) y un puntero de datos que apunta a alguna de las posiciones
+disponibles en el segundo bloque de datos.
+
+Veamos las instrucciones y un programa de ejemplo:
+
+\begin{lstlisting}
+> Incrementa el puntero de datos en 1
+< Decrementa el puntero de datos en 1
++ Incrementa el valor apuntado por el puntero de datos
+- Decrementa el valor apuntado por el puntero de datos
+. Muestra en pantalla el valor apuntado por el puntero de
+  datos
+, Lee un valor del teclado y lo almacena en la posición
+  indicada por el puntero de datos
+[ Si el valor apuntado por el puntero de datos es 0 salta al ]
+  correspondiente. Sino continua la ejecución normalmente
+] Si el valor apuntado por el puntero de datos no es cero,
+  salta al [ correspondiente, sino continua la ejecución
+  normalmente.
+\end{lstlisting}
+
+En contra de lo que pueda parecer el lenguaje es mucho más sencillo de
+lo que parece, si bien, hacer cosas útiles es complicado. Veamos un
+sencillo programa.
+
+\hypertarget{ejecutando-un-programa-brainfuck}{%
+\sectiontext{white}{black}{EJECUTANDO UN PROGRAMA BF PASO A PASO}\label{ejecutando-un-programa-brainfuck}}
+
+Este va a ser nuestro programa de ejemplo. Como podéis ver utiliza todos
+los comandos, así que nos va a permitir ver como funciona el lenguaje en
+su totalidad.
+
+\begin{lstlisting}
+++>,.<[>+.<-]
+\end{lstlisting}
+
+Vamos a ir ejecutando el programa caracter a caracter para que entendáis
+como funciona cada uno de los comandos. Los caracteres
+{\verb!\^!} indican la posición a la que apunta el
+puntero de programa (PC) y el puntero de datos (PD):
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    | ^ 
+DATOS | 0 0 0 0 0 0 0 ....
+PD    | ^
+\end{lstlisting}
+
+Al comenzar el programa encontramos dos caracteres
+{\verb!+!}. Estos caracteres incrementan el valor al
+que apunta el puntero de datos. Así que tras ejecutar las dos primeras
+instrucciones la máquina virtual tendrá el siguiente estado:
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |   ^ 
+DATOS | 2 0 0 0 0 0 0 ....
+PD    | ^
+\end{lstlisting}
+
+Hemos almacenado el valor dos en la primera posición de memoria. Este va
+a ser nuestro contador para el bucle que implementamos un poco más
+adelante. Ahora nos encontramos un caracter {\verb!>!},
+el cual nos mueve a la siguiente posición de memoria:
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |    ^ 
+DATOS | 2 0 0 0 0 0 0 ....
+PD    |   ^
+\end{lstlisting}
+
+En esta nueva posición vamos a leer un caracter de la consola e
+imprimirlo inmediatamente. Eso es lo que hacen los comandos
+{\verb!,!} y {\verb!.!}. Supongamos
+que hemos introducido el caracter {\verb!A!}. La
+máquina virtual mostrará el siguiente estado:
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |      ^ 
+DATOS | 2 64 0 0 0 0 0 ....
+PD    |    ^
+  
+\end{lstlisting}
+
+Estamos a punto de comenzar el bucle, así que primero nos movemos a la
+posición de memoria que contiene nuestro contador de bucle. Esto lo
+hacemos con el comando {\verb!<!} con el que nos
+moveremos a la posición inicial.
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |       ^ 
+DATOS | 2 64 0 0 0 0 0 ....
+PD    | ^
+\end{lstlisting}
+
+Ahora estamos en condiciones de ejecutar nuestro bucle. Puesto que el
+valor al que apunta el puntero de datos no es cero, continuamos la
+ejecución normalmente entrando en el bucle. Dentro del bucle haremos dos
+cosas, incrementar el valor que hemos leído por consola y decrementar el
+contador del bucle:
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |        ^ 
+DATOS | 2 64 0 0 0 0 0 ....
+PD    |   ^
+\end{lstlisting}
+
+Ahora que apuntamos a la {\verb!A!}, sumamos uno e
+imprimimos.
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |          ^ 
+DATOS | 2 65 0 0 0 0 0 ....
+PD    |   ^
+\end{lstlisting}
+
+Ahora apuntamos a nuestro contador y lo de crementamos
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |           ^ 
+DATOS | 2 65 0 0 0 0 0 ....
+PD    | ^
+
+PRG   | ++>,.<[>+.<-]
+PC    |             ^ 
+DATOS | 1 65 0 0 0 0 0 ....
+PD    | ^
+\end{lstlisting}
+
+Llegados a este punto nos encontramos el caracter
+{\verb!]!}, el cual, si el valor actual de los datos no
+es cero, saltará a la posición del caracter {\verb![!}
+correspondiente. En este caso el valor al que estamos apuntando es
+{\verb!1!}, así que volvemos hacia atrás.
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |       ^       
+DATOS | 1 65 0 0 0 0 0 ....
+PD    | ^
+\end{lstlisting}
+
+Y procedemos a ejecutar una vez más el cuerpo del bucle.
+
+\begin{lstlisting}
+PRG   | ++>,.<[>+.<-]
+PC    |             ^       
+DATOS | 0 66 0 0 0 0 0 ....
+PD    | ^
+\end{lstlisting}
+
+Tras lo cual volveremos a comprobar nuestro contador, el cual ahora vale
+{\verb!0!} y por lo tanto el bucle termina.
+
+Este sencillo programa imprime el caracter que introducimos por teclado
+y los dos siguientes.
+
+Como podéis ver, lo que hacen los programas es super-sencillo, pero
+programar cualquir cosa útil es muy complicado.
+
+En nuestras pruebas, vamos a utilizar este programa que acabamos de
+mostrar, además de el \emph{Hola Mundo} para la prueba final. Aquí os lo
+dejamos para que os divirtáis un poco:
+
+\begin{lstlisting}
+++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.
++++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
+\end{lstlisting}
+
+\hypertarget{risc-v}{%
+\sectiontext{white}{black}{RISC-V}\label{risc-v}}
+
+Hablemos ahora brevemente del la arquitectura RISC-V, en concreto la
+versión de 64 bits. La arquitectura RISC-V es, como su propio nombre
+indica una arquitectura {\verb!RISC!} (\emph{Reduced
+Instruction Set Computer} u \emph{Ordenadores con Conjunto de
+Instrucciones Reducido}). Este tipo de procesadores normalmente ofrecen
+muy pocas instrucciones, pero es capaz de ejecutarlas muy rápido. Otros
+procesadores como los Intel tienen una arquitectura
+{\verb!CISC!}, donde la {\verb!C!}
+significa complejo y ofrecen varios cientos de instrucciones con tiempos
+de ejecución muy variados.
+
+\begin{entradilla}
+{\em {\color{introcolor}La plataforma RISC-V} guarda muchas similitudes con los procesadores MIPS.}
+\end{entradilla}
+
+Tanto los nombres de los registros como los de las instrucciones se
+corresponden casi uno a uno con los procesadores MIPS, sin embargo hay
+algunas diferencias pequeñas diferencias entre ellos. Vamos, que si
+sabéis ensamblador MIPS también sabéis ensamblador RISC-V.
+
+Si no sabéis ninguno, no os preocupéis, iremos explicando cada una de
+las instrucciones que usemos en nuestro programa.
+
+\hypertarget{risc-v-registros}{%
+\sectiontext{white}{black}{RISC-V REGISTROS}\label{risc-v-registros}}
+
+La arquitecura RISC-V define 32 registros de los cuales los 5 primeros
+tienen funciones especiales, y el resto se agrupan de acuerdo a la forma
+en la que se usan normalmente, si bien, esto es solo una convención. Los
+registros se nombran por su índice o por un nombre simbólico, al igual
+que sucede con los procesadores MIPS.
+
+\begin{lstlisting}
+x0      zero    Siempre devuelve 0
+x1      ra      Dirección de Retorno
+x2      sp      Puntero de pila
+x3      gp      Puntero Global
+x4      tp      Puntero de Hebra
+x6      t0      Temporal/Dirección Retorno Alternativa
+x6-7    t1-2    Registros temporales
+x8      s0/fp   Registros Guardados/Frame Pointer
+x9      s1      Registro Guardado
+x10-11  a0-a1   Parametros Funciones/Valores Retorno
+x12-18  a2-7    Parámetros Funciones
+x18-27  s2-11   Registros Guardados
+x28-31  t3-t6   Temporales
+\end{lstlisting}
+
+En nuestro programa nosotros usaremos los registros
+{\verb!a0-a7!} para hacer las llamadas al sistema y los
+registros {\verb!t0-t6!} para almacenar nuestros
+valores temporales.
+
+En nuestro caso no vamos a utilizar funciones, así que, en realidad,
+podemos utilizar los registros que nos de la gana, pero en un programa
+normal, tendremos varias funciones y unas llamarán a otras. Los
+registros que aparecen en la lista como
+{\verb!Registros Guardados!} deben ser guardados por la
+función que es llamada. Es decir nuestra función no debe modificar esos
+registros, puesto que el código que llame a nuestra función, va a
+esperar que esos registros se preserven. En otras palabras, si queremos
+usar esos registros en un programa normal, debemos guardar sus valores
+originales y restaurarlos antes de volver de la función.
+
+Como os adelantamos, en nuestra implementación no vamos a tener ese
+problema, pero en caso de que alguien se preguntara esto\ldots{} bueno,
+pues ahí lo tenéis.
+
+\hypertarget{bf01.-leyendo-el-programa-en-memoria}{%
+\sectiontext{white}{black}{LEYENDO PROGRAMA EN MEMORIA}\label{bf01.-leyendo-el-programa-en-memoria}}
+
+Comenzaremos haciendo un programa muy sencillo que lea la entrada del
+usuario, y almacene esos datos en memoria. El código sería algo así:
+
+\begin{lstlisting}
+    .text
+    .global _start
+    .equ MEM_SIZE, 4096
+_start:
+    # Lee datos desde entrada standard
+    la   a1, prog  # Buffer de lectura
+    move t1, zero  # Contador longitud del programa
+bucle01:    
+    li   a7, 63   # SYS_read
+    li   a0, 0    # stdin
+    li   a2, 1    # leemos caracter a caracter
+    # a0 = read (a7=SYS_read, a0=stdin, a1=prog, a2=1);
+    ecall       
+    blez a0, cont01 # Si a0 <= 0 dejamos de leer
+    
+    add  t1, t1, 1 # Contamos un caracter
+    add  a1, a1, 1 # Actualizamos el pumtero
+    j    bucle01     # Repetimos
+cont01:
+    # Muestra la cadena leida por pantalla
+    li   a7, 64     # SYS_write
+    li   a0, 1      # a0 = stdout
+    la   a1, prog   # a1 = prog
+    move a2, t1   # a2 = size
+    # write (a7=SYS_write, a0=stdout, a1=prog, a2=size);
+    ecall         
+exit:
+    li   a7, 93   # Exit  
+    li   a0, 0
+    ecall
+prog:
+    .fill MEM_SIZE  
+\end{lstlisting}
+
+Para los que no sepáis mucho de programación en ensamblador en
+GNU/Linux, vamos a daros un curso intensivo con este programa. Para los
+que ya sepáis\ldots{} bueno, os podéis saltar la siguiente sección ;).
+
+\hypertarget{curso-intensivo-de-ensamblador-gnulinux}{%
+\sectiontext{white}{black}{CURSO INTENSIVO DE ENSAMBLADOR GNU/Linux}\label{curso-intensivo-de-ensamblador-gnulinux}}
+
+Para este cursillo intensivo, simplemente vamos a ir comentando las
+distintas partes del programa que os acabamos de mostrar. Vamos a ello:
+
+\begin{lstlisting}
+    .text
+    .global _start
+_start:
+\end{lstlisting}
+
+Así suelen empezar todos los programas en ensamblador,
+independientemente del procesador. La primera línea
+{\verb!.text!} indica que lo que sigue es código (no
+datos). La segunda declara un símbolo global llamado
+{\verb!_start!}. Este es el símbolo que va a utilizar
+el linker como nuestro punto de entrada\ldots{} o dicho de otra forma,
+es donde el programa va a empezar a ejecutarse.
+
+A continuación tenemos la etiqueta {\verb!_start:!}
+que indica la dirección en la que empezará nuestro programa.
+
+\hypertarget{llamadas-al-sistema-en-risc-v}{%
+\sectiontext{white}{black}{LLAMADAS AL SYSTEMA CON RISC-V}\label{llamadas-al-sistema-en-risc-v}}
+
+Para poder hacer cosas como leer datos del usuario o imprimir mensajes
+en pantalla debemos hacer llamadas al sistema operativo o
+{\verb!syscalls!}. Para cada sistema operativo esto se
+hace de una determinada forma y, dentro de cada sistema operativo, cada
+arquitectura usa un método distinto.
+
+\begin{entradilla}
+{\em Podemos ejecutar llamadas al sistema en Linux siguiendo {\color{introcolor}el ABI System V}}
+\end{entradilla}
+
+Para UNIX se suele utilizar lo que se conoce como System V ABI. ABI es
+el acrónimo de \emph{Application Binary Interface}\ldots{} es como un
+API, pero en vez de decirte que funciones puedes utilizar, te dice como
+llamar a esas funciones (entre otras cosas). Linux utiliza esta ABI y en
+general funciona de la siguiente forma:
+
+\begin{itemize}
+
+\item
+  Almacenamos en un registro el número de syscall que queremos invocar.
+\item
+  Almacenamos en otros registros los parámetros que queremos pasar a la
+  syscall
+\item
+  Utilizamos un comando especial para pasar a modo kernel
+\item
+  Recibimos en un registro (o dos) el resultado de la operación.
+  Normalmente se usa el mismo registro que el utilizado para indicar la
+  syscall o el primer parámetro.
+\end{itemize}
+
+Para el caso de RISC-V:
+
+La forma de ejecutar estar esta {\verb!syscall!} sería:
+
+\begin{itemize}
+
+\item
+  Almacenamos el número de syscall en registro
+  {\verb!a7!}
+\item
+  Pasamos los parámetros en los registros
+  {\verb!a1-a6!}
+\item
+  Ejecutamos la instrucción {\verb!ecall!}
+\item
+  Procesamos el resultado devuelto en {\verb!a0!}
+\end{itemize}
+
+Poniendo como ejemplo la llamada al sistema
+{\verb!SYS\_READ!} (que tiene valor
+{\verb!63!} para RISC-V) que tiene el siguiente
+prototipo C:
+
+\begin{lstlisting}[language=C]
+ ssize_t read(int fd, void buf[.count], size_t count);
+\end{lstlisting}
+
+El siguiente código leería un caracter de la entrada estándar
+(descriptor {\verb!0!}):
+
+\begin{lstlisting}
+  li   a7, 63     # SYS_read
+  move a0, zero   # stdin
+  la   a1, buffer # Puntero a nuestro buffer de lectura
+  li   a2, 1      # leemos un caracter
+  ecall           # SYS_read (a0=0, a1=buffer, a2=1)
+\end{lstlisting}
+
+Expliquemos brevemente las instrucciones que hemos utilizado:
+
+\begin{itemize}
+
+\item
+  {\verb!li!} (\emph{Load Immediate}). Permite cargar
+  un valor en registro.
+\item
+  {\verb!la!} (\emph{Load Address}). Permite cargar una
+  dirección en un registro. Esta es una pseudo instrucción
+\item
+  {\verb!move!}. Permite mover valores entre registros.
+  Está también es una pseudo instrucción.
+\end{itemize}
+
+\hypertarget{pseudo-instrucciones}{%
+\sectiontext{white}{black}{PSEUDO-INSTRUCCIONES}\label{pseudo-instrucciones}}
+
+Los procesadores RISC tienen muy pocas instrucciones, como su propio
+nombre indica y sucede a menudo que, para realizar operaciones
+relativamente comunes es necesario utiliza dos instrucciones. En esos
+casos se definen pseudo instrucciones, es decir, instrucciones que no
+existen en el procesador, pero que se han especificado y los
+ensambladores entiende. ARM, MIPS y también RISC-V definen varias de
+estas pseudo instrucciones.
+
+\begin{entradilla}
+{\em Los procesadores RISC suelen ofrecer {\color{introcolor}pseudo-instruciones} para operaciones comunes que requiren más de una instrucción}
+\end{entradilla}
+
+Para nuestro ejemplo anterior, veremos como se implementan las dos
+pseudo instrucciones de las que os hemos hablado. Vamos a comenzar con
+{\verb!move!} que es más sencilla:
+
+\begin{lstlisting}
+   move t1, zero   <=> addi t1, zero, 0
+   move a0, a1     <=> addi a0, a1, 0
+\end{lstlisting}
+
+La instrucción {\verb!addi!} \emph{Add Immediate} nos
+permite sumar un valor numérico a un registro y almacenarlo en otro. Si
+le sumamos {\verb!0!}\ldots{} bueno, estamos copiando
+el valor de un registro en otro\ldots{} Véis por donde vamos no?
+
+La instrucción {\verb!li!} también se implementa usando
+{\verb!addi!} en algunos casos:
+
+\begin{lstlisting}
+   li a1, 10  <=> addi a1, zero, 10
+\end{lstlisting}
+
+La instrucción {\verb!la!} es un poco más complicada.
+Se expande de la siguiente forma:
+
+\begin{lstlisting}
+    la a1, buffer  <=> auipc a1, XX
+                       addi  a1, a1, YY
+\end{lstlisting}
+
+La instrucción {\verb!auipc r, 0xAABB!} realiza la
+siguiente operación:
+
+\begin{lstlisting}
+r = 0xAABB0000 + PC
+\end{lstlisting}
+
+Es decir, toma el parámetro y lo carga en la parte alta del registro, y
+luego le suma el valor del contador del programa. Es una forma de
+direccionamiento relativo. El {\verb!addi!} que sigue
+ajusta la parte baja de la dirección si es necesario. Afortunadamente no
+tenemos que preocuparnos de calcular todas estas cosas, el ensamblador
+lo hará por nosotros.
+
+\begin{quote}
+Podéis estudiar vosotros que instrucciones son pseudo instrucciones y en
+que se traducen utilizando el siguiente comando sobre vuestros binarios:
+riscv64-linux-gnu-objdump -d -M no-aliases PROG
+\end{quote}
+
+\hypertarget{leyendo-nuestro-programa-brainfck-en-un-buffer}{%
+\sectiontext{white}{black}{LEYENDO PROGRAMA BF EN UN BUFFER}\label{leyendo-nuestro-programa-brainfck-en-un-buffer}}
+
+Con todo lo que acabamos de ver el código para leer la entrada del
+usuario (el programa BrainF*ck) en un buffer sería tal que así:
+
+\begin{lstlisting}
+    # Lee datos desde entrada standard
+    la   a1, prog  # Buffer de lectura
+    move t1, zero  # Contador longitud del programa
+bucle01:    
+    li   a7, 63   # SYS_read
+    li   a0, 0    # stdin
+    li   a2, 1    # leemos caracter a caracter
+    # a0 = read (a7=SYS_read, a0=stdin, a1=prog, a2=1);
+    ecall       
+    blez a0, cont01 # Si a0 <= 0 dejamos de leer
+    
+    add  t1, t1, 1 # Contamos un caracter
+    add  a1, a1, 1 # Actualizamos el pumtero
+    j    bucle01     # Repetimos
+cont01:
+.data
+prog:
+    .fill MEM_SIZE  
+\end{lstlisting}
+
+Deberíais de identificar fácilmente la llamada al sistema
+{\verb!SYS\_read!}. También podéis ver como declaramos
+el buffer en la sección {\verb!.data!}. Esto le dice al
+linker que, lo que pongamos a partir de ahí se cargará en un bloque de
+memoria con permisos de lectura y escritura, pero no de ejecución.
+
+Veamos como funciona el bucle de lectura. Una vez que ejecutamos la
+llamada al sistema con {\verb!ecall!} en el registro
+{\verb!a0!} tendremos el resultado de la operación.
+Para {\verb!read!} un valor negativo indica un error,
+un valor 0 indica fin de fichero ({\verb!EOF!}) y un
+valor {\verb!1!} indica que hemos leído nuestro
+caracter correctamente.
+
+Así que usamos la instrucción {\verb!blez a0, cont01!}.
+Esta instrucción salta a {\verb!cont01!} si el valor de
+{\verb!a0!} es menor o igual que cero. Y si. Esta es
+también una pseudo instrucción. RISC-V solo define un par de
+instrucciones de salto condicional y el resto de posibles saltos se
+generan como pseudo instrucciones. En este caso:
+
+\begin{lstlisting}
+blez r, offset   <=> bge zero, r, offset
+\end{lstlisting}
+
+Que significa \_Salta si {\verb!0!} es mayor o igual el
+registro {\verb!r!}. Que es lo mismo que salta si
+{\verb!r!} es menor o igual que cero.
+
+Esa es nuestra condición de final de buffer. En caso de tener que hacer
+otra iteración simplemente incrementamos el puntero dentro de nuestro
+buffer y una variable que usamos para contar los caracteres leídos y
+saber el tamaño de nuestro programa.
+
+\hypertarget{comprobando-que-vamos-bien}{%
+\sectiontext{white}{black}{COMPROBANDO PROGRESO}\label{comprobando-que-vamos-bien}}
+
+Para comprobar que todo ha ido bien, podéis añadir una llamada a
+{\verb!SYS\_write!} para imprimir el buffer.
+
+\begin{lstlisting}
+    # Muestra la cadena leida por pantalla
+    li   a7, 64     # SYS_write
+    li   a0, 1      # a0 = stdout
+    la   a1, prog   # a1 = prog
+    move a2, t1   # a2 = size
+    # write (a7=SYS_write, a0=stdout, a1=prog, a2=size);
+    ecall         
+\end{lstlisting}
+
+Finalmente terminamos el programa con una llamada a
+{\verb!SYS\_EXIT!} para que todo termine de forma
+ordenada.
+
+\begin{lstlisting}
+exit:
+    li a7, 93   # Exit  
+    li a0, 0
+    ecall
+prog:
+    .fill MEM_SIZE  
+\end{lstlisting}
+
+El código que hemos escrito hasta el momento debería funcionar sin
+problemas. Leerá todo lo que escribamos en la consola hasta que pulsemos
+{\verb!CTRL+D!} (esta es la forma de mandar un
+{\verb!EOF!} desde la consola) y luego lo imprimirá en
+pantalla.
+
+\hypertarget{ejecutando-nuestro-primer-programa}{%
+\sectiontext{white}{black}{EJECUTANDO NUESTRO PRIMER PROGRAMA}\label{ejecutando-nuestro-primer-programa}}
+
+La forma más sencilla de que podáis instalar todas las herramientas que
+necesitáis sin problemas de configuración especial de vuestra máquina es
+utilizando un contenedor docker. Eso sí, tenéis que tener docker
+configurado correctamente y eso no lo vamos a tratar en este artículo.
+Así que vamos a ello:
+
+\begin{entradilla}
+{\em La forma más sencilla de compilar y ejecutar nuestro programa es {\color{introcolor}desplegando un contendor docker}}
+\end{entradilla}
+
+Supongamos que tenemos nuestro programa en ensamblador en un
+subdirectorio llamado {\verb!bf!} najo nuestro
+directorio actual. Así que iniciamos un contenedor Debian montando ese
+directorio:
+
+{\scriptsize
+\begin{verbatim}
+$ docker run -it --rm -v $PWD/bf:/opt/src debian:12
+root@5bca9d382ba1:/# apt update
+(...)
+root@5bca9d382ba1:/# apt upgrade
+(...)
+root@5bca9d382ba1:/# apt upgrade
+root@5bca9d382ba1:/# apt install gcc-riscv64-linux-gnu qemu-user-static
+root@5bca9d382ba1:/# cd /opt/src/
+root@5bca9d382ba1:/# riscv64-linux-gnu-as -o bf-riscv.o bf-riscv.s
+root@5bca9d382ba1:/tmp# riscv64-linux-gnu-ld -o bf-riscv bf-riscv.o 
+root@5bca9d382ba1:/tmp# qemu-riscv64-static ./bf-riscv
+\end{verbatim}
+}
+
+O si tenéis alguna máquina RISC-V como mi Milk-V Duo, podéis subir el
+binario y ejecutarlo allí.
+
+
+\sectiontext{white}{black}{CONCLUSIONES}\label{conclusiones}
+
+En este artículo hemos aprendido a programar en BrainFuck y unas cuantas cosas de como programar ensamblador para RISC-V, Hemos programa el esqueleto de nuestro intérprete y el código para leer programas desde la consola y procesarlos. En el próximo número añadiremos los comandos básicos para poder empezar a ejecutar nuestros propios programas.
+
+\end{multicols}
+
+
+\rput(7.9,-3){\resizebox{!}{6.0cm}{{\epsfbox{images/promo/promo04.eps}}}}

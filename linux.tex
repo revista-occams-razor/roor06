@@ -1,0 +1,345 @@
+\hypertarget{linux:kernel1}{}\label{linux:kernel}
+\pagestyle{linux}
+
+\rput(8.0,-2.0){\resizebox{!}{12cm}{{\epsfbox{images/header-linux.eps}}}}
+
+\psset{fillstyle=solid}
+\psframe[fillcolor=black,opacity=0.6](2,-4.5)(17,0)
+
+
+
+% -------------------------------------------------
+% Cabecera
+\begin{flushright}
+
+
+{\color{teal}\mtitle{14cm}{Multitarea Apropiativa en ordenadores Domésticos}}
+
+\msubtitle{10cm}{Una breve retrospectiva sobre innovación}
+
+{\sf\color{white}{ por Nelly Kerningham}}
+
+{\psset{linecolor=black,linestyle=dotted}\psline(-12,0)}
+\end{flushright}
+
+\vspace{2mm}
+% -------------------------------------------------
+
+
+
+\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\scriptsize}
+
+
+\intro{introcolor}{E}{s lamentable como el tiempo y la propaganda tergiversa la realidad y
+verdades a medias o mentiras completas se acaban convirtiendo en la
+realidad de muchas personas. En este articulo vamos a explorar algunas
+de esas \emph{inocentes} falacias que pulula por las mentes de la
+sociedad.}
+
+\begin{multicols}{2}
+
+
+Esta es una cuestión que quizás resulte sorprendente a muchos de
+vosotros. Lo fué para mi, si bien, al tener la suerte de haber vivido
+aquellos años había cosas que no encajaban. Vamos a hacer un breve
+repaso de la evolución de los sistemas operativos más populares.
+
+En esta sección vamos a ver las capacidades de los kernel de los OSes de
+microsoft y Apple comparados con Linux. Pero primero, una breve introdución para que sepáis de que vamos a hablar en el resto del artículo
+
+\hypertarget{kernel}{%
+\sectiontext{white}{black}{MULTITAREA APROPIATIVA}\label{kernel}}
+
+Antes del advenimiento de los sistemas multi-core, la multitarea solo se podía conseguir repartiendo la CPU entre los procesos, es decir, ejecutando los programas a los pocos. Existen dos formas fundamentales de hacer esto que se conocen como: Multitarea colaborativa y Multitarea apropiativa (del inglés {\em preemptive}).
+
+En la primera, el sistema operativo nunca inicia lo que se conoce como cambio de contexto (parar un proceso e iniciar otro). Cada proceso sigue ejecutándose hasta que decida liberar la CPU voluntariamente, o en ciertas circunstancias como si debe esperar por una operación de entrada/salida u otro evento. En estos sistema, un error de programación en cualquier proceso puede provocar que todo el sistema se bloquee.
+
+\begin{entradilla}
+{\em Los sistemas multiproceso se pueden implementar de forma {\color{introcolor}Colaborativa o Apropiativa.}}
+\end{entradilla}
+
+En la segunda, el sistema operativo asigna un tiempo fijo a cada tarea. Pasado ese tiempo (o en caso de que el proceso se bloquee esperando por algún evento), el sistema operativo asigna la CPU a otro proceso. En estos sistemas, aunque un proceso se bloquee, el sistema seguirá funcionando sin problemas.
+
+Bien, como os podéis imaginar, la primera es muchísimo más sencilla de implementar y también mucho peor puesto que cualquier proceso puede bloquear la ejecución del sistema operativo y por tanto de todo el ordenador.
+
+¿Qué sistema operativo doméstico creéis que fue el primero en ofrecer este tipo de sistema operativo?. Seguid leyendo si no conocéis la respuesta.
+
+
+
+
+\hypertarget{microsoft}{%
+\sectiontext{white}{black}{MICROSOFT}\label{microsoft}}
+
+Dejando a un lado el DOS (\emph{Disk Operating System}) y centrándonos
+en los otros sistemas operativos de esta compañía, los conocidos como
+\emph{Windows}, los cuales curiosamente no fueron, ni mucho menos los
+primeros entornos de ventanas, ni siquiera para los PCs de la época.
+
+\begin{entradilla}
+{\em {\color{introcolor}Windows NT} fué el primer sistema operativo de Micrsoft con multitarea pre-emptiva allá por 1993. }
+\end{entradilla}
+
+
+Históricamente, la versión 3.1 es considerada la primera versión oficial
+de Windwos. Lanzada en 1992 seguía siendo una \emph{Shell} sobre DOS,
+fue la primera en ofrece un soporte más que anecdótico al modo protegido
+introducido por los procesadores 80386. Versiones anteriores de Windows
+habían explorado este campo, pero los avances no se podían considerar
+suficientemente representativos. De hecho, fue la version 3.11 liberada
+en 1993, la primera que empezaba a parecer algo más que un programa DOS
+que pintaba ventanas.
+
+
+
+En ese mismos año, 1993, la versión 3.1 de Windows NT también se
+lanzaba. Windows NT era la versión profesional del sistema operativo de
+Microsoft. El nombre al parecer viene de incremental las letras de
+\textbf{VMS} (el sistema operativo de las máquinas VAX, uno de los más
+potentes de la época), es decir, \textbf{WNT} y de ahí windows NT.
+
+
+La primera versión de Windows NT fue la 3.1, sin embargo fue la version
+3.5 liberada en 1994 la mas popular. Windows NT utilizaba un modelo de
+memoria plano y un kernel con multitarea pre=emptiva en modo protegido.
+Nada que ver con el modelo de memoria segmentado de la otra familia de
+windows y la multitarea cooperativa\ldots{} que tanta inestabilidad
+causaba a los PCs de la época.
+
+Tras esto, se lanzó windows 95 en\ldots{} 1995 con la intención de sacar
+más partido a las capacidades de los procesadores de la época (los
+procesadores Pentium ya estaba disponibles). Windows 95, 98 y ME fueron
+realmente un desastre, muy inestables, hasta el punto de corromper el
+sistema de tal forma que los usuarios de esos sistemas consideraban
+natural, reinstalar de cero todo el sistema cada pocos meses.
+
+Finalmente, en 2000, microsoft consiguió aunar los avances en el GUI de
+windows 95 y posteriores (aspecto en el que si hubo un gran desarrollo)
+y el kernel de NT. Windows 2000 fue liberado, y esa es quizás la primera
+versión realmente estable de los sistemas Windows. Para el tema que nos
+ocupa, no tiene sentido avanzar más en el tiempo.
+
+\hypertarget{apple}{%
+\sectiontext{white}{black}{APPLE}\label{apple}}
+
+Esta sección va a ser curiosa y levantará algunas ampollas. Vamos a
+ello. El otro jugador en el campo de juegos de los ordenadores
+personales junto con el tandem IBM/Microsoft era Apple. En el albor de
+los 80 y 90 los ordenadores Apple no eran, ni mucho menos, tan populares
+como los PCs, fundamentalmente por su precio, varios ordenes de magnitud
+por encima.
+
+Los ordenadores Apple, a diferencia de los PCs de IBM, disponían de HW
+especial para imagen y sonido, lo que los hicieron muy populares en ese
+ámbito. Sin embargo ahora estamos hablando de el sistema operativo, y en
+ese ámbito , dejando a un lado el interfaz de usuario, no era nada del
+otro mundo.
+
+Hasta el 91, los OSes de los populares Machintosh se conocen como System
+Software N, siendo el \emph{System Software 1} el primero liberado en
+1984 y el \emph{System Software 7}. De este último OS hubo varias
+versiones liberadas desde 1991 hasta 1997 en la que la version 7.6 se
+libero. Esta última versión ya se conoce como \emph{MAC OS 7.6} y es a
+partir de ella con la que se cambia el nombre de \emph{System Software}
+a \emph{MAC OS}, si bien el número de versión se mantiene.
+
+\begin{entradilla}
+{\em {\color{introcolor}Apple no utilizo multitare pre-emptiva} en sus sistemas Operativos hasta 1997}
+\end{entradilla}
+
+
+
+Pues lo creáis o no, hasta este momento, los sistemas operativos de
+Apple todavía utilizaban multitarea cooperativa\ldots{} en 1997!!!. La
+estrategia hay que admitir que era ingeniosa. Hago un GUI muy bonito y
+fácil de utilizar, pero diseñado para ejecutar una sola aplicación a la
+vez\ldots{} de forma que no se note mucho que no era multitarea real.
+
+
+
+Hasta que se liberó el proyecto Rhapsody (lo que se acabaría
+convirtiendo en Ma OS X) los sistemas de Apple no disponían de
+multitarea real. De hecho hasta el lanzamiento de Mac OS X en 2001, no
+se produjo la transición al kernel Mach que tomaron prestado de NeXT.
+
+\hypertarget{otros-kernels-dignos-de-menciuxf3n}{%
+\sectiontext{white}{black}{OTROS KERNELS DIGNOS DE MENCIÓN}\label{otros-kernels-dignos-de-menciuxf3n}}
+
+Si bien el mundo de los ordenadores personales estaba totalmente
+dominado por Microsoft y Apple en los 80 y 90, y dejando a un lado otros
+ordenadores como las máquina Atari o Amiga que tuvieron una vida más
+corta, hay un par de sistemas que son dignos de mención:
+
+\begin{itemize}
+\item
+  OS/2. Este sistema operativo desarrollado por IBM (quien también
+  colaboró con Microsoft en el desarrollo de NT) e inicialmente por
+  Microsoft. EN 1992 OS/2 ofrecía un sistema operativo nativo de 32bits,
+  siendo la versión OS/2 Wrap la más popular por su mejorado interaz y
+  el buen soporte de applicaciones DOS y WIndows. OS/2 Wrap se lanzó en
+  1994
+\item
+  BeOS. BeOS fue lanzado oficialmente en 1995, como un moderno OS con
+  todas las principales características de un sistema operativo moderno,
+  todavía no disponible en ninguno de los sistemas operativos de los que
+  hemos hablado. Lamentablemente, este sistema operativo nunca llegó a
+  ser popular, si bien, todavía hoy en día hay versiones disponibles con
+  las que probarlo. Especial mención para el proyecto libre Haiku que
+  todavía está en activo.
+\item
+  NextStep: Si bien, el sistema operativo NextStep así como las máquinas
+  Next caen un poco fuera de la categoría de ordenador personal (igual
+  que las grandes máquinas Unix o VAX que ofrecían multitarea real desde
+  hacia varios años), merece la pena mencionarla ya que fue el OS
+  seleccionado por Apple para su transición final a la liga de los
+  mayores. NextStep desarrollo su propio kernel basado en Mach, un
+  microkernel desarrollado en la universidad Carnegie Mellon
+\item
+  Minix: Es un sistema operativo con arquitectura de microkernel. Creado
+  inicialmente para fines educativos por el Profesor Andrew S. Tanenbaum
+  una versión reducida de su código fuente fue publicada en un libro. El
+  sistema inicialmente desarrollado para plataformas intel de 16 bits se
+  desarrolló hasta su versión 3 y ha permanecido activo hasta 2018. Al
+  contrario que Linux que utiliza un diseño monolítico, Minix sigue un
+  modelo de nanokernel como Mach. Esta discrepancia fue el origen de un
+  conocido debate entre
+  \href{https://en.wikipedia.org/wiki/Tanenbaum\%E2\%80\%93Torvalds_debate}{Tanenbaum
+  y Torvalds}.
+\end{itemize}
+
+\hypertarget{linux}{%
+\sectiontext{white}{black}{LINUX}\label{linux}}
+
+El kernel Linux se liberó en el verano de 1991. Desde su primera versión
+fue concebido como un sistema operativo de 32 bits ejecutándose en modo
+protegido, con multitarea pre-emptiva, espacio de direccionamiento plano
+y soporte nativo para redes TCP/IP.
+
+En 1992 las primeras distribuciones de Linux ya estaban disponibles, si
+bien es cierto que eran un poco complicadas de utilizar (por decirlo de
+una forma suave), pero a partir de aquel momento nuevas distrbuciones de
+Linux no dejaron de aparecer.
+
+Debian en 1993 aunque la primera versión estable es de 1996, si bien
+todos sabemos lo que significa estable para Debian. Slackware también
+vio la luz en 1993, pero no fue hasta la versión 4.2 de Red-Hat que
+GNU/Linux empezó a ser una opción viable para usuarios avanzados.
+
+Dejando a un lado la complejidad de la instalación y la deficiencia de
+soporte HW que era uno de los principales motivos de complejidad en la
+instalación, el kernel linux fue de los primeros en ofrecer soporte real
+para sistemas de 32bits. Mucho antes que cualquiera de los otros sistema
+operativos desarrollados por compañías privadas.
+
+Cabe reseñar que aunque GNU/Linux no estaba orientado a usuarios
+domésticos inicialmente, siempre dispuso de entornos gráficos con
+algunas capacidades que muchos sistemas comerciales han empezado a
+soportar muy recientemente\ldots{} Pero como decía Conan, esa es otra
+historia.
+
+
+\hypertarget{conclusiones}{%
+\sectiontext{white}{black}{CONCLUSIONES}\label{conclusiones}}
+
+Si bien, algunas compañías se han elegido como abanderadas de la
+innovación, la realidad es bien distinta y como hemos podido ver, cuanto
+más triunfadora es una impresa menos innovadora es. Es algo
+tremendamente curioso. IBM, Next o Be Inc realmente innovaron y
+contribuyeron al progreso de los sistemas operativos. Dejando a IBM a un
+lado, que nunca hizo negocio de sus sistemas operativos, las otras
+compañías han terminando desapareciendo.
+
+NeXt consiguió transcender a través de OpenStep y su implementación
+libre GNU/Step, y de los sistemas operativos de Apple\ldots{} Si bien
+llevó casi una década en que los avances de esa compañía se reflejaran
+en Mac OS. SI bien, a nivel de sistema operativo NeXt se aprovechó de
+los desarrollos del mundo UNIX de años anteriores y de el microkernel
+March.
+
+BeOS por su parte también a transcendido gracias al mundo del software
+libre con proyectos como Haiku.
+
+Finalmente, resulta curioso como la mayor innovación en esta área ha
+estado dominada for el kernel Linux desde su creación a principios de
+los 90. Linuxha sido históricamente uno de los kernel adoptando nuevas
+tecnologías y conceptos más rápidamente. Esto es gracias sobre todo a su
+código abierto que abre una puerta a investigadores y empresas para
+implementar nuevas ideas sin necesidad de partir de cero.
+
+Así que, independientemente de lo que algunas empresas pretenden dar a
+entender, de la furiosa defensa de diversos fanboys y de la propaganda
+barata, esas empresas que se presentan como avanzadilla del progreso, en
+muy raras ocasiones lo han sido y cada vez menos lo volverán a ser.
+
+%\columnbreak
+
+\textbf{Cronología de los principales kernels multitarea desde lo 80s}
+{\footnotesize
+\begin{verbatim}
++- 1984 : System Software 1 
+|  1985 : Windows 1.0
++- 1987 : System Software 5
+|         Windows 2.0
+|         Minix 1.0 (8088)
++- 1988 : System Software 6
+|         NextStep 0.9 (m68k)
++- 1989 : NextStep 1.0 (m68k)
++- 1990 : WIndows 3.0
+|         NextStep 2.0 (m68k) 
++- 1991 : Kernel Linux
+|         System Software 7
+|         Minix 1.5 (m68K, SPARC, 386)
+|         NextStep 2.1 (m68k)
++- 1992 : Windows 3.1
+|         OS/2 2.0
+|         NextStep 3.0 (m68k)
++- 1993 : Windows 3.11
+|         Windows NT 3.1
+|         Slackware 1.0 (Kernel 0.99.11)
+|         NextStep 3.1-3.2 (m68k, i386)
++- 1994 : Debian 0.91 (Linux 0.99)
+|         Windows NT 3.5
+|         OS/2 Wrap
+|         Slackware 1.2-2.1 (Kernel 1.0.8-1.1.59)
++- 1995 : Windows 95
+|         RedHat 1/2.0 (Kernel 1.2.8-1.2.13)
+|         Debian 0.93 (Linux 1.2.13)
+|         Slackware 2.2-3.0 (Kernel 1.2.1-1.2.13)
+|         BeOS DR1
+|         NextStep 3.3 (m68k, i386, SPARC, PA-RISC)
++- 1996 : OS/2 Wrap 4
+|         Windows NT 40
+|         Debian 1.1 (Buz) 1.2 (Rex) (Kernel 2.0)
+|         RedHat 4 (Kernel 2.0.18)
+|         Slackware 3.1 (Kernel 2.0.0)
+|         NextStep 4.0 (m68k, i386, SPARC)
++- 1997 : Systems Software 7,6/Mac Os 7 
+|         Mac Os 8 (Multitarea cooperativa)
+|         Debian 1.3 (Bo) (Kernel 2.0.33)
+|         Red Hat 4.2-5.0 (Kernel 2.0.27-2.0.32)
+|         Slackware 3.1-3.4 (Kernel 2.0.29-2.0.30)
+|         Minix 2.0
+|         NextStep 4.1 (m68k, i386, SPARC)
++- 1998 : Windows 98
+|         Mac OS 8.1-8.5.1
+|         BeOs R3
+|         Debian 2.0 (Hamm) (Kernel 2.0.34)
+|         Red Hat 5.2 (Kernel 2.0.36)
+|         Slackware 3.5-3.6 (Kernel (2.0.34-2.0.35)
++- 1999 : Mac Os 8.6
+|         Mac Os 9
+|         RedHat 6 (Kernel 2.2.5)
+|         Debian 2.1 (Slink) (Kernel 2.0.34-38)
+|         Slackware 3.9-7.0 (Kernel 2.0.37-2.2.13)
++- 2000 : Windows 2000 (NT 5.0)
+|         Windows 98SE
+|         Windows ME
+|         Mac Os X
+|         Debian 2.2 (Potato) (Kernel 2.2.19)
+|         Red Hat 6.2 - 7.0 (Kernel 2.2.12-2.2.16)
+|         Slackware 7.1 (Kernel 2.2.16)
+\end{verbatim}
+}
+
+\end{multicols}
+\clearpage
+\pagebreak

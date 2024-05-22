@@ -1,0 +1,219 @@
+\hypertarget{fpn:bucle}{}\label{fpn:bucle}
+\pagestyle{fpn}
+
+\rput(7.9,-0.5){\resizebox{!}{14cm}{{\epsfbox{images/header-loop.eps}}}}
+
+\psset{fillstyle=solid}
+\psframe[fillcolor=black,opacity=0.7](2,-4.5)(17,0)
+
+
+
+% -------------------------------------------------
+% Cabecera
+\begin{flushright}
+
+
+{\color{pink}\mtitle{14cm}{Bucle Infinito en C. Modo esotérico}}
+
+\msubtitle{8cm}{Fenómenos Paranormales}
+
+{\sf\color{white}{ por Carolyn Lightrun}}
+
+%{{\psset{linecolor=black,linestyle=dotted}\psline(-12,0)}}
+\end{flushright}
+
+
+\vspace{2mm}
+% -------------------------------------------------
+\lstset{language=C,frame=tb,framesep=5pt,basicstyle=\scriptsize}
+
+\intro{introcolor}{L}{a maravilla del lenguaje C es que en ocasiones pasan cosas
+inexplicables que hablen la puerta al misterio y la superstición. Esa es
+la razón por la que es bastante común que los programadores C muestren
+sus programas en noches de luna llena tras sacrificar al menos una
+gallina.}
+
+\begin{multicols}{2}
+
+
+
+Si, C es así, a veces ocurren fenómenos inexplicables y mientras sean
+inexplicables pensaremos que esos hechos están controlados por entes
+superiores, Dioses del caché o semidioses de la laguna oscura de la
+pila. Pero una vez que encuentras la explicación\ldots{} simplemente se
+convierten en bugs.
+
+\hypertarget{bucles-infinitos}{%
+\sectiontext{white}{black}{BUCLES INFINITOS}\label{bucles-infinitos}}
+
+Antes de mostraros nuestro bucle infinito modo esotérico vamos a ver las
+distintas formas en las que podemos hacer un bucle infinito en C.
+
+Por cierto, un bucle infinito es una parte de un programa que se ejecuta
+una y otra vez sin fin\ldots{} bueno, si, es exactamente lo que su
+nombre indica. Normalmente, dentro del bucle suele haber una condición
+de parada, pero en ocasiones la única forma de pararlo es matando el
+proceso.
+
+\hypertarget{bucle-infinito-while}{%
+\sectiontext{white}{black}{\texorpdfstring{BUCLE INFINITO
+\texttt{while}}{Bucle infinito while}}\label{bucle-infinito-while}}
+
+La primera forma de crear un bucle infinito y, probablemente la más
+común y evidente es utilizar un bucle\verb!while!de
+la siguiente forma:
+
+\begin{lstlisting}[language=C]
+...
+while (1) {
+    puts ("Me más que el chorizo");
+}
+\end{lstlisting}
+
+Puesto que la condición en el\verb!while!es siempre
+cierta, todo lo que pongamos en su interior se repetirá hasta que
+interrumpamos el programa.
+
+Podemos poner el número que más rabia nos de en el
+{\verb!while!}, mientras sea distinto de
+{\verb!0!}, la condición se considerará verdadera y el
+bucle no parará de ejecutarse.
+
+\hypertarget{bucle-infinito-for}{%
+\sectiontext{white}{black}{\texorpdfstring{BUCLE INFINITO
+\texttt{for}}{Bucle infinito for}}\label{bucle-infinito-for}}
+
+Otra forma, menos habitual de implementar bucles infinitos es utilizando
+{\verb!for!} de la siguiente forma:
+
+\begin{lstlisting}[language=C]
+  for (;;) {
+    puts ("Me repito más que el chorizo");
+  }
+\end{lstlisting}
+
+En este caso, al no pasar ninguna condición se toma por defecto el valor
+true. La expresión anterior es equivalente a:
+
+\begin{lstlisting}[language=C]
+  for (;1;) {
+    puts ("Me repito más que el chorizo");
+  }
+\end{lstlisting}
+
+\hypertarget{bucle-infinito-goto}{%
+\sectiontext{white}{black}{\texorpdfstring{BUCLE INFINITO
+\texttt{goto}}{Bucle infinito goto}}\label{bucle-infinito-goto}}
+
+Este si que no lo vais a ver en el mundo real, ya que todo el mundo
+considera los {\verb!goto!}s peligrosos, si bien, tanto
+los bucles\verb!while!como los
+{\verb!for!} se implementan en ensamblador con un
+{\verb!goto!} o salto. Podemos escribir un bucle
+infinito con\verb!goto!de la siguiente forma:
+
+\begin{lstlisting}[language=C]
+bucle:
+    puts ("Me repito más que el chorizo");
+    goto bucle;
+\end{lstlisting}
+
+\hypertarget{bucle-infinito-esotuxe9rico}{%
+\sectiontext{white}{black}{BUCLE INFINITO ESOTÉRICO}\label{bucle-infinito-esotuxe9rico}}
+
+Para terminar os dejamos una forma de implementar un bucle infinito un
+tanto esotérica. Veámoslo y luego lo discutimos.
+
+\begin{lstlisting}[language=C]
+  for (unsigned char i = 0; i < 256; i++)
+    puts ("Me repito más que el chorizo");
+\end{lstlisting}
+
+Puesto que nosotros queremos hacer un bucle infinito, nuestro programa
+es perfectamente válido, sin embargo cuando vemos algo como esto es
+habitual que la intención del programador no fuera programar un bucle
+infinito.
+
+\begin{entradilla}
+{\em Un pequeño despieste y un {\color{introcolor}pequeño bucle} se convierte en un {\color{introcolor}bucle INFINITO}}
+\end{entradilla}
+
+De hecho esto es algo que me pasó hace muchos años cuando empezaba a
+programar en C. Aquí esta la historia:
+
+\sectiontext{white}{black}{UNA HISTORIA DE MIEDO}
+
+Cuando empiezas a programar en C, ves todos esos tipos con distintos
+tamaños e intentas ser guay y usar el tipo que mejor se adecue a lo que
+tienes que hacer. Así que si vas a hacer un bucle de unas pocas
+interacciones, lo suyo es utilizar un byte como contador para no
+desperdiciar memoria. Luego aprendes, muchos años después que realmente
+no estas ahorrando nada\ldots{} pero eso es otra historia.
+
+Pues resulta que estaba programando algún tipo de algoritmo de procesado
+de señal. No recuerdo exactamente lo que era, pero en algún lugar había
+un pequeño bucle de 32 o 64 iteraciones. Todo funcionaba bien, hasta que
+aumenté el valor a 128 y de repente mi programa dejó de funcionar.
+
+\begin{entradilla}
+{\em Este {\color{introcolor}tipo de errores} suelen ser difíciles de ver una vez se cometen.}
+\end{entradilla}
+
+
+Recuerdo que me llevó algún tiempo reaccionar. Pensaba: ``el programa
+funcionaba hace 2 minutos y no he cambiado el algoritmo¨. Usé el
+depurador y me llevo un rato entender porque cuando llegaba a la última
+interacción mi contador se reseteaba y el bucle comenzaba a empezar.
+
+
+
+En aquel momento estaba usando un contador
+{\verb!char!} que en los 90 era con signo por defecto
+(esto ha ido cambiando varias veces en las últimas décadas) y por lo
+tanto, al llegar a 128 se producía un overflow y el siguiente valor
+pasaba a ser -127 en lugar de 129.
+
+\hypertarget{el-bucle-infinito-explicado}{%
+\sectiontext{white}{black}{EL BUCLE INFINITO EXPLICADO}\label{el-bucle-infinito-explicado}}
+
+En el código de arriba pasa exactamente lo mismo.
+{\verb!i!} es un
+{\verb!unsigned char!} que toma valores entre
+{\verb!0!} y {\verb!255!}. En la
+última iteración, cuando\verb!i!vale
+{\verb!255!}\verb!for!hace la
+comparación\verb!i < 256!la cual es falsa, ya que
+{\verb!i!} todavía es {\verb!255!},
+así que ejecuta el bucle una vez más.
+
+\begin{entradilla}
+{\em Los {\color{introcolor}Overflows en tipos enteros} son {\color{introcolor}bugs} habituales}
+\end{entradilla}
+
+
+Al terminar el bucle,\verb!for!ejecuta la última
+instrucción {\verb!i++!}. Como
+{\verb!i!} es\verb!255!al sumarle
+uno pasa a ser\verb!256!pero ese valor no se puede
+almacenar en un byte ({\verb!unsigned char!}) con lo
+que solo los 8 bits menos significativos se asignan a la variable
+{\verb!i!} y por lo tanto toma el valor
+{\verb!0!} el cual es menor que
+{\verb!256!} y por lo tanto el bucle continua
+infinitamente.
+
+\hypertarget{conclusiuxf3n}{%
+\sectiontext{white}{black}{CONCLUSIONES}\label{conclusiuxf3n}}
+
+Bueno, la conclusión más importante es que debemos ser consciente del
+tamaño de nuestras variables y evitar que se produzcan desbordamientos
+que pueden provocar\ldots{} fenómenos extraños\ldots.. uuuuuuhhhhhhh
+
+
+
+\rput(5.0,-12.5){\resizebox{!}{26cm}{{\epsfbox{images/promo/promo02.eps}}}}
+\raggedcolumns
+\clearpage
+\end{multicols}
+
+

@@ -1,0 +1,520 @@
+% Este fichero es parte del Número 4 NE de la Revista Online Occam's Razor
+% Revista On-line Occam's Razor Número 4 Nueva Época
+%
+% (c)  2019, The Occam's Razor Team
+%
+% Esta obra está bajo una licencia Reconocimiento 3.0 España de
+% Creative Commons. Para ver una copia de esta licencia, visite
+% http://creativecommons.org/licenses/by/3.0/es/ o envie una carta a
+% Creative Commons, 171 Second Street, Suite 300, San Francisco,
+% California 94105, USA. 
+
+
+\documentclass[10pt,a4paper,twoside]{article}
+
+
+% Paquetes... probablemente alguno no sea necesario
+% 
+
+\usepackage[latin1]{inputenc}
+%\usepackage[utf8]{inputenc}
+\usepackage[greek,spanish]{babel}  % Símbolo del euro
+\usepackage{graphicx}
+\usepackage{a4,fancyhdr, multicol}
+\usepackage{float}
+\usepackage{pdftricks}
+%\usepackage[pdf]{pstricks}
+\usepackage{color}
+%\usepackage{pst-plot}
+\usepackage{pst-eps}
+\usepackage{wrapfig}
+\usepackage{eso-pic}
+\usepackage{listings}
+\usepackage{textpos}
+\usepackage{epsf}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{mathtools,amssymb,amsthm} 
+
+% Configuración de Hyperenlaces.
+% Uso del paquete hyperref sugerido por Cruz Enrique Borges Hernández
+\hypersetup{
+    bookmarks=true,        % show bookmarks bar?
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=red,         % color of internal links
+    citecolor=green,       % color of links to bibliography
+    filecolor=magenta,     % color of file links
+    urlcolor=blue          % color of external links
+}
+
+
+
+%\usepackage[sfdefault,condensed]{roboto}
+%\usepackage[sfdefault]{roboto}
+\usepackage[default]{lato}
+\renewcommand*\sfdefault{ugq}
+\usepackage[T1]{fontenc} 
+
+
+
+
+% Configuración de tamaño de página
+\setlength{\parindent}{0in}
+\setlength{\parskip}{0.1cm}
+\setlength{\oddsidemargin}{0.05mm}
+\setlength{\evensidemargin}{0.05mm}
+
+\setlength{\headsep}{-0.6cm}
+%\setlength{\footsep}{-1.0cm}
+\setlength\headheight{2.1cm}
+
+\addtolength{\textwidth}{4cm}
+\addtolength{\topmargin}{-2.5cm}
+\addtolength{\textheight}{3.4cm}
+
+%\addtolength{\headwidth}{-1.2\marginparsep}
+%\addtolength{\headwidth}{-1.2\marginparwidth}
+
+\newcommand{\hsection}[4]{
+  {\begin{flushright}{
+        {\psset{linecolor=#1,linestyle=dotted}
+          \psline(-14,0.05)(1,0.05)}
+        \colorbox{#1}{
+          \begin{minipage}{#3\linewidth}
+            \center
+            \textcolor{#2}{
+              \textsf{\textbf{#4}}}            
+          \end{minipage}
+        }
+        }
+  \end{flushright}}
+  \vspace{4mm}
+}
+
+
+\newcommand{\hhsection}[4]{
+  {\begin{flushleft}{
+        {\psset{linecolor=#1,linestyle=dotted}
+          \psline(17,0.05)(1,0.05)}
+        \colorbox{#1}{
+          \begin{minipage}{#3\linewidth}
+            \center
+            \textcolor{#2}{
+              \textsf{\textbf{#4}}}
+          \end{minipage}
+        }
+        }
+  \end{flushleft}}
+  \vspace{4mm}
+}
+
+
+
+
+
+\fancypagestyle{divulgacion}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  \fancyhead[RE]{\hsection{purple}{white}{0.14}{DIVULGACIÓN}}
+  \fancyhead[LO]{\hhsection{purple}{white}{0.14}{DIVULGACIÓN}}
+
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+
+\fancypagestyle{trucos}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  \fancyhead[RE]{\hsection{lime}{black}{0.14}{TRUCOS}}
+  \fancyhead[LO]{\hhsection{lime}{black}{0.14}{TRUCOS}}
+
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+
+
+
+
+
+\fancypagestyle{ratas}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  %\fancyhead[LE,RO]{\textbf{\textsf{RATAS}}}
+  \fancyhead[RE]{\hsection{introcolor}{black}{0.2}{RATAS DE BIBLIOTECA}}
+  \fancyhead[LO]{\hhsection{introcolor}{black}{0.2}{RATAS DE BIBLIOTECA}}
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+
+
+\fancypagestyle{geek}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  %\fancyhead[LE,RO]{\textbf{\textsf{RATAS}}}
+  \fancyhead[RE]{\hsection{violet}{white}{0.2}{ZONA GEEK}}
+  \fancyhead[LO]{\hhsection{violet}{white}{0.2}{ZONA GEEK}}
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+
+
+\fancypagestyle{seguridad}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  \fancyhead[RE]{\hsection{black}{green}{0.14}{SEGURIDAD}}
+  \fancyhead[LO]{\hhsection{black}{green}{0.14}{SEGURIDAD}}
+
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+
+\fancypagestyle{pvc}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  %\fancyhead[LE,RO]{\textbf{\textsf{RATAS}}}
+  \fancyhead[RE]{\hsection{orange}{black}{0.25}{VITAMINA C}}
+  \fancyhead[LO]{\hhsection{orange}{black}{0.25}{VITAMINA C}}
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+
+\fancypagestyle{como}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  %\fancyhead[LE,RO]{\textbf{\textsf{RATAS}}}
+  \fancyhead[RE]{\hsection{violet}{white}{0.2}{COMO FUNCIONA}}
+  \fancyhead[LO]{\hhsection{violet}{white}{0.2}{COMO FUNCIONA}}
+
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+
+
+\fancypagestyle{mala-bestia}{
+      %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  %\fancyhead[LE,RO]{\textbf{\textsf{RATAS}}}
+    \fancyhead[RE]{\hsection{cyan}{black}{0.15}{MALA BESTIA}}
+  \fancyhead[LO]{\hhsection{cyan}{black}{0.15}{MALA BESTIA}}
+
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+\fancypagestyle{linux}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  %\fancyhead[LE,RO]{\textbf{\textsf{RATAS}}}
+  \fancyhead[RE]{\hsection{teal}{white}{0.25}{GNU/LINUX}}
+  \fancyhead[LO]{\hhsection{teal}{white}{0.25}{GNU/LINUX}}
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+\fancypagestyle{fpn}{
+    %\fancyhead{}
+  \fancyhead{}
+  \fancyfoot{} % clear all footer fields
+
+  \fancyhead[RE]{\hsection{pink}{black}{0.14}{FENÓMENOS EXTRAÑOS}}
+  \fancyhead[LO]{\hhsection{pink}{black}{0.14}{FENÓMENOS EXTRAÑOS}}
+
+  \fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+  \fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+  \renewcommand{\footrulewidth}{0.4pt}
+  
+  \renewcommand{\headrulewidth}{0pt}
+  }
+
+
+%\pagestyle{fancy}
+% Configuración de Cabeceras Fancy Header
+%\fancyhead{}
+%\fancyfoot{} % clear all footer fields
+%\fancyfoot[LE]{\textbf{\textsf{OCCAM's Razor | \thepage}}}
+%\fancyfoot[RO]{\textbf{\textsf{\thepage | OCCAM's Razor}}}
+%\renewcommand{\footrulewidth}{0.4pt}
+
+% Elimina líneas de cabecera
+% 
+%\renewcommand{\headrulewidth}{0pt}
+
+% Colores
+\definecolor{introcolor}{rgb}{0.8,1.0,0.8}
+\definecolor{listcolor}{rgb}{0.2,0.4,0.2}
+\definecolor{titlecolor}{rgb}{0.4,0.5,0.1}
+\definecolor{excolor}{rgb}{0.8,0.8,0.8}
+\definecolor{notecolor}{rgb}{0.4,0.4,1.0}
+
+% ********************************************************
+% Definición de Comandos y Entornos
+% ********************************************************
+
+% Comandos de uso general
+% ---------------------------------------------------------
+% Secciones títulos y subtítulos de cada página
+\newcommand{\msection}[4]{
+{\begin{flushright}{
+{\psset{linecolor=black,linestyle=dotted}\psline(-17,0)}
+\colorbox{#1}{
+\begin{minipage}{#3\linewidth}
+\center
+  \textcolor{#2}{
+    \textsf{\textbf{#4}}}
+\end{minipage}
+}}\end{flushright}}
+
+\vspace{4mm}
+}
+
+\newcommand{\mtitle}[2]{
+  {\resizebox{#1}{0.7cm}{\textbf{\textsf{#2}}}}
+  \vspace{1mm}
+}
+
+
+\newcommand{\msubtitle}[2]{
+  {\resizebox{#1}{0.5cm}{{\gray{\textbf{\textsf{#2}}}}}}
+  \vspace{1mm}
+}
+
+% Principio de Página. Pone el cuadro superior con la sección
+\newcommand{\bOpage}[3]{
+  \msection{#1}{black}{#2}{#3}
+  \begin{multicols}{2}
+}
+
+% Fin de página. Termina el entorno multicols
+\newcommand{\eOpage}{
+\pagebreak
+\end{multicols}
+}
+
+% Fin e Inicio de Página. Sino utilizamos figuras fuera de las
+% columnas del cuerpo principal, esta es la forma adecuada de marcar
+% cada página
+\newcommand{\ebOpage}[3]{
+\eOpage
+\bOpage{#1}{#2}{#3}
+}
+
+% Crea el cuadro de introducción al principio de cada artículo
+\newcommand{\intro}[3]{
+\colorbox{#1}{\large
+  \begin{minipage}{.98\linewidth}
+    \vspace{2mm}
+    {\colorbox{black}{\color{white}{\resizebox{!}{1.0cm}{#2}}}{ #3}}
+  \vspace{1mm}
+  \end{minipage}
+}
+\vspace{4mm}
+}
+
+
+
+\newcommand{\introA}[3]{
+\colorbox{#1}{
+  \begin{minipage}{\linewidth}
+    \vspace{2mm}
+    {\colorbox{black}{\color{white}{\resizebox{!}{1.0cm}{#2}}}{#3}}
+  \vspace{1mm}
+  \end{minipage}
+}
+\vspace{4mm}
+}
+
+
+
+% Comando para introducir figura en entorno multicol
+\newcommand{\myfig}[3]{
+\begin{center}
+  \includegraphics[width=#3\hsize,angle=#1]{#2}
+  \nobreak
+\end{center}}
+
+% Caption para figuras en entorno multicol
+\setcounter{figure}{1}
+\newcommand{\mycaption}[1]{
+  \begin{quote}
+    {\small
+    {{\sc Figura} \arabic{figure}: #1}
+    }
+  \end{quote}
+  \stepcounter{figure}
+}
+
+
+% Comandos para utilizar tablas y figuras en entorno multicols
+\makeatletter
+\newenvironment{tablehere}
+  {\def\@captype{table}}
+  {}
+
+\newenvironment{figurehere}
+  {\def\@captype{figure}}
+  {}
+\makeatother
+
+% Caption para figuras en entorno multicol sin contador
+\newcommand{\nncaption}[1]{
+  %\begin{quote}
+    {\footnotesize{\textbf{
+    {#1}
+    }}}
+  %\end{quote}
+}
+
+\newcommand{\sectiontext}[3]{\vspace{4mm}{{\textcolor{titlecolor}{\large{\textbf{\textsf{#3}}}}}}
+\vspace{1mm}
+}
+
+%\newcommand{\sbullet}{\,\begin{picture}(1,1)(0,-3)\circle*{3}\end{picture}\ }
+\newcommand{\EOP}{\psframe[fillstyle=solid, fillcolor=titlecolor,
+linecolor=titlecolor](0,0)(4pt,4pt)}
+%\newcommand{\EOP}{\psframe[fillstyle=solid, fillcolor=black, linecolor=black](0,0)(4pt,6pt)}
+
+% Entornos (begin... end)
+% ----------------------------------------------------
+% Entorno para introducir ejemplos
+\newenvironment{mexample}{
+  \vspace{2mm}
+  \bgroup
+  \tiny
+}{
+  \egroup
+  \vspace{4mm}
+}
+
+% Entorno para introducir entradillas en el texto
+\newenvironment{entradilla}{
+  \vspace{5mm}
+  \color{introcolor}{\hrule }
+  \color{black}
+  \vspace{2mm}
+  \bgroup
+  \LARGE
+\begin{spacing}{0.6}
+}{
+\end{spacing}
+  \egroup
+  \vspace{5mm}
+  \color{introcolor}{\hrule height 3pt}
+  \vspace{5mm}
+}
+
+
+
+% **************************************************************************
+% Comienza el documento
+\begin{document}
+
+% Portada, no utiliza Fancy Header e introduce imagen de portada con PStricks
+\pagestyle{empty}
+
+\rput(8,-13){\epsfbox{images/portada.eps}}
+
+\clearpage
+\pagebreak
+
+% Imagen con el sumario en la siguiente página
+%\rput(8,-14.0){\resizebox{!}{30cm}{{\epsfbox{images/sumario.eps}}}}
+
+
+
+%\pagebreak
+
+% Activa Fancy Headers stilo e incluye los distintos artículos
+\pagestyle{fancy}
+
+\definecolor{introcolor}{rgb}{0.6,0.7,0.3}
+
+\include{sumario}
+
+\include{editorial}
+
+\include{ratas}
+\include{linux}
+\include{pildora-alloca}
+\include{seguridad}
+\include{bucle}
+\include{compresion}
+\include{geek_bf01}
+\include{truquis}
+
+
+
+%\include{trucos}
+
+
+\pagestyle{empty}
+
+\rput(8,-8.0){\resizebox{21.5cm}{!}{{\epsfbox{images/general/contraportada.eps}}}}
+
+
+
+\end{document}
+% Convert files
+%  iconv -c -t ISO_8859-1 paper3.tex -o paper4.tex
+% -c elimina caracteres invalidos
+%  file -ib paper1.tex
+
+% Emacs substitutions
+%  \\passthrough{\\lstinline!\(.+\)!} -> \\verb!\1!
+% 
+
+% Colors
+% black, blue, brown, cyan, darkgray, gray, green, lightgray, lime, magenta, olive, orange, pink, purple, red, teal, violet, white, yellow.
