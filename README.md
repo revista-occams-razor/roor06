@@ -1,4 +1,4 @@
-# Revista online Occams Razor
+# Revista online Occam's Razor
 
 Este fichero es parte de la revista on-line Occam's Razor la cual esta disponible libremente en formato de código fuente bajo una licencia [CC-BY](http://creativecommons.org/licenses/by/4.0/), lo que significa que puede utilizar los ficheros de este número para lo que desees siempre y cuando indiques de donde has obtenido el original. Para ello puedes citar:
 
@@ -6,6 +6,9 @@ Atribución Revista Online Occam's Razor (ROOR) : https://github.com/revista-occ
 
 En caso de que utilices alguno de los ficheros que forman parte de cualquier número de Occam's Razor nos encantaría que nos lo comunicaras. No es necesario que lo hagas, pero a nosotros nos hace muy felices ver que nuestro trabajo se comparte y resulta de utilidad para los demás.
 
+También podéis leer la revista en línea en [AQUI](https://ibolcode.net/roor/revista.php?numero=6)
+
+O descargar el PDF ya compilaodo desde nuestra web: https://ibolcode.net/roor/numeros.php
 
 Para más detalles sobre como ponerte en contacto con nosotros mira la sección CONTACTO más abajo.
 
